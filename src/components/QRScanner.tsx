@@ -6,31 +6,35 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
-interface Result {
-  text: string;
-}
+// We're removing our custom Result interface since it doesn't match the library's type
 
 const QRScanner: React.FC = () => {
   const [scanning, setScanning] = useState(false);
   const navigate = useNavigate();
 
-  const handleScan = async (result: Result | null | undefined) => {
-    if (result?.text) {
+  // Update the handler to work with the library's result type
+  const handleScan = async (result: any) => {
+    if (result) {
       try {
-        const product = await fetchProductByQRCode(result.text);
+        // Extract the text from the result based on the library's structure
+        const scannedText = typeof result === 'string' ? result : result?.text;
         
-        if (product) {
-          toast({
-            title: 'Product Found!',
-            description: `Redirecting to ${product.name}`,
-          });
-          navigate(`/product/${product.id}`);
-        } else {
-          toast({
-            title: 'Product Not Found',
-            description: 'The scanned QR code does not match any product.',
-            variant: 'destructive'
-          });
+        if (scannedText) {
+          const product = await fetchProductByQRCode(scannedText);
+          
+          if (product) {
+            toast({
+              title: 'Product Found!',
+              description: `Redirecting to ${product.name}`,
+            });
+            navigate(`/product/${product.id}`);
+          } else {
+            toast({
+              title: 'Product Not Found',
+              description: 'The scanned QR code does not match any product.',
+              variant: 'destructive'
+            });
+          }
         }
         
         setScanning(false);
