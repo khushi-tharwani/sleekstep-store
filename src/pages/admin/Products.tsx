@@ -21,10 +21,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { Product } from '@/types';
+import { Product, ProductSize, ProductColor, Review } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Edit, Plus } from 'lucide-react';
@@ -74,13 +73,78 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch products with their related data (sizes, colors, reviews)
+      const { data: productsData, error } = await supabase
         .from('products')
         .select('*');
       
       if (error) throw error;
+
+      // Fetch the related data for each product
+      const productsWithRelations = await Promise.all(productsData.map(async (product) => {
+        // Fetch sizes for this product
+        const { data: sizesData } = await supabase
+          .from('product_sizes')
+          .select('*')
+          .eq('product_id', product.id);
+        
+        // Fetch colors for this product
+        const { data: colorsData } = await supabase
+          .from('product_colors')
+          .select('*')
+          .eq('product_id', product.id);
+        
+        // Fetch reviews for this product
+        const { data: reviewsData } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('product_id', product.id);
+        
+        // Transform database objects to match our interfaces
+        const sizes: ProductSize[] = (sizesData || []).map(size => ({
+          id: size.id,
+          value: size.value,
+          available: size.available || false
+        }));
+
+        const colors: ProductColor[] = (colorsData || []).map(color => ({
+          id: color.id,
+          name: color.name,
+          value: color.value,
+          available: color.available || false
+        }));
+
+        const reviews: Review[] = (reviewsData || []).map(review => ({
+          id: review.id,
+          userId: review.user_id || '',
+          userName: review.user_name,
+          rating: review.rating,
+          comment: review.comment || '',
+          createdAt: review.created_at || ''
+        }));
+
+        // Transform the product to match our Product interface
+        return {
+          id: product.id,
+          name: product.name,
+          brand: product.brand,
+          category: product.category,
+          price: product.price,
+          salePrice: product.sale_price,
+          description: product.description,
+          images: product.images || [],
+          sizes: sizes,
+          colors: colors,
+          stock: product.stock || 0,
+          rating: product.rating || 0,
+          reviews: reviews,
+          isFeatured: product.is_featured || false,
+          isTrending: product.is_trending || false,
+          createdAt: product.created_at || ''
+        } as Product;
+      }));
       
-      setProducts(data as Product[]);
+      setProducts(productsWithRelations);
     } catch (error: any) {
       toast({
         title: "Failed to fetch products",
@@ -104,25 +168,44 @@ const AdminProducts = () => {
     }
 
     try {
-      const newProduct = {
-        name,
-        brand,
-        category,
-        price: parseFloat(price),
-        sale_price: salePrice ? parseFloat(salePrice) : null,
-        description,
-        stock: parseInt(stock),
-        images: images.length > 0 ? images : [imageUrl],
-        is_featured: false,
-        is_trending: false
-      };
-
-      const { data, error } = await supabase
+      // First, create the product
+      const productImages = images.length > 0 ? images : [imageUrl];
+      const { data: productData, error: productError } = await supabase
         .from('products')
-        .insert(newProduct)
+        .insert({
+          name,
+          brand,
+          category,
+          price: parseFloat(price),
+          sale_price: salePrice ? parseFloat(salePrice) : null,
+          description,
+          stock: parseInt(stock),
+          images: productImages,
+          is_featured: false,
+          is_trending: false
+        })
         .select();
       
-      if (error) throw error;
+      if (productError) throw productError;
+      
+      if (productData && productData.length > 0) {
+        const productId = productData[0].id;
+        
+        // Create default size
+        await supabase.from('product_sizes').insert({
+          product_id: productId,
+          value: 'M',
+          available: true
+        });
+        
+        // Create default color
+        await supabase.from('product_colors').insert({
+          product_id: productId,
+          name: 'Black',
+          value: '#000000',
+          available: true
+        });
+      }
       
       toast({
         title: "Product added",
@@ -153,21 +236,20 @@ const AdminProducts = () => {
     }
 
     try {
-      const updatedProduct = {
-        name,
-        brand,
-        category,
-        price: parseFloat(price),
-        sale_price: salePrice ? parseFloat(salePrice) : null,
-        description,
-        stock: parseInt(stock),
-        images: images.length > 0 ? images : [imageUrl],
-        updated_at: new Date().toISOString()
-      };
-
+      const productImages = images.length > 0 ? images : [imageUrl];
       const { error } = await supabase
         .from('products')
-        .update(updatedProduct)
+        .update({
+          name,
+          brand,
+          category,
+          price: parseFloat(price),
+          sale_price: salePrice ? parseFloat(salePrice) : null,
+          description,
+          stock: parseInt(stock),
+          images: productImages,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', currentProduct.id);
       
       if (error) throw error;
@@ -485,7 +567,128 @@ const AdminProducts = () => {
           </DialogHeader>
 
           <div className="py-4">
-            {productForm}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name *</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Product name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="brand">Brand *</Label>
+                  <Input
+                    id="brand"
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    placeholder="Brand name"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Input
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="Category"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price *</Label>
+                  <Input
+                    id="price"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="salePrice">Sale Price (optional)</Label>
+                  <Input
+                    id="salePrice"
+                    value={salePrice}
+                    onChange={(e) => setSalePrice(e.target.value)}
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Product description"
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stock *</Label>
+                <Input
+                  id="stock"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  type="number"
+                  placeholder="0"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Images</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Image URL"
+                    className="flex-1"
+                  />
+                  <Button type="button" onClick={handleAddImage}>Add</Button>
+                </div>
+                
+                {images.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    <Label>Current Images:</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {images.map((image, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                          <img 
+                            src={image} 
+                            alt={`Product image ${index+1}`} 
+                            className="w-12 h-12 object-cover rounded" 
+                          />
+                          <span className="flex-1 truncate text-sm">{image}</span>
+                          <Button 
+                            size="icon" 
+                            variant="destructive" 
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
@@ -510,7 +713,128 @@ const AdminProducts = () => {
           </DialogHeader>
 
           <div className="py-4">
-            {productForm}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name *</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Product name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="brand">Brand *</Label>
+                  <Input
+                    id="brand"
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    placeholder="Brand name"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Input
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="Category"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price *</Label>
+                  <Input
+                    id="price"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="salePrice">Sale Price (optional)</Label>
+                  <Input
+                    id="salePrice"
+                    value={salePrice}
+                    onChange={(e) => setSalePrice(e.target.value)}
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Product description"
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stock *</Label>
+                <Input
+                  id="stock"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  type="number"
+                  placeholder="0"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Images</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Image URL"
+                    className="flex-1"
+                  />
+                  <Button type="button" onClick={handleAddImage}>Add</Button>
+                </div>
+                
+                {images.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    <Label>Current Images:</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {images.map((image, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                          <img 
+                            src={image} 
+                            alt={`Product image ${index+1}`} 
+                            className="w-12 h-12 object-cover rounded" 
+                          />
+                          <span className="flex-1 truncate text-sm">{image}</span>
+                          <Button 
+                            size="icon" 
+                            variant="destructive" 
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
