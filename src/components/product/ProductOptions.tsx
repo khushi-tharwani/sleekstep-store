@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, Dispatch, SetStateAction } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,14 +15,62 @@ import { Check, ShoppingCart } from 'lucide-react';
 
 interface ProductOptionsProps {
   product: Product;
+  onSizeChange?: Dispatch<SetStateAction<string>>;
+  onColorChange?: Dispatch<SetStateAction<string>>;
+  onQuantityChange?: Dispatch<SetStateAction<number>>;
+  currentSize?: string;
+  currentColor?: string;
+  currentQuantity?: number;
 }
 
-const ProductOptions: React.FC<ProductOptionsProps> = ({ product }) => {
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [selectedColor, setSelectedColor] = useState<string>('');
-  const [quantity, setQuantity] = useState(1);
+const ProductOptions: React.FC<ProductOptionsProps> = ({ 
+  product,
+  onSizeChange,
+  onColorChange,
+  onQuantityChange,
+  currentSize: externalSize,
+  currentColor: externalColor,
+  currentQuantity: externalQuantity
+}) => {
+  // Use either the external state (if provided) or local state
+  const [localSelectedSize, setLocalSelectedSize] = useState<string>('');
+  const [localSelectedColor, setLocalSelectedColor] = useState<string>('');
+  const [localQuantity, setLocalQuantity] = useState(1);
+  
+  // Use external state if provided, otherwise use local state
+  const selectedSize = externalSize !== undefined ? externalSize : localSelectedSize;
+  const selectedColor = externalColor !== undefined ? externalColor : localSelectedColor;
+  const quantity = externalQuantity !== undefined ? externalQuantity : localQuantity;
+  
   const { addToCart } = useCart();
   const { toast } = useToast();
+
+  // Handle size change
+  const handleSizeChange = (value: string) => {
+    if (onSizeChange) {
+      onSizeChange(value);
+    } else {
+      setLocalSelectedSize(value);
+    }
+  };
+
+  // Handle color change
+  const handleColorChange = (value: string) => {
+    if (onColorChange) {
+      onColorChange(value);
+    } else {
+      setLocalSelectedColor(value);
+    }
+  };
+
+  // Handle quantity change
+  const handleQuantityChange = (newQuantity: number) => {
+    if (onQuantityChange) {
+      onQuantityChange(newQuantity);
+    } else {
+      setLocalQuantity(newQuantity);
+    }
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -55,14 +103,14 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({ product }) => {
   // Increase quantity
   const increaseQuantity = () => {
     if (quantity < product.stock) {
-      setQuantity(quantity + 1);
+      handleQuantityChange(quantity + 1);
     }
   };
 
   // Decrease quantity
   const decreaseQuantity = () => {
     if (quantity > 1) {
-      setQuantity(quantity - 1);
+      handleQuantityChange(quantity - 1);
     }
   };
 
@@ -88,7 +136,7 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({ product }) => {
         <label className="block text-sm font-medium">
           Size <span className="text-red-500">*</span>
         </label>
-        <Select value={selectedSize} onValueChange={setSelectedSize}>
+        <Select value={selectedSize} onValueChange={handleSizeChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select size" />
           </SelectTrigger>
@@ -119,7 +167,7 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({ product }) => {
               key={color.id}
               type="button"
               aria-label={`Select color ${color.name}`}
-              onClick={() => setSelectedColor(color.name)}
+              onClick={() => handleColorChange(color.name)}
               className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                 selectedColor === color.name
                   ? 'border-primary shadow-lg'
