@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -9,7 +10,7 @@ import { Product } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { generateProductQRCode } from "@/utils/qr-generator";
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,60 +27,120 @@ const ProductDetail = () => {
   
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!id) return;
+      
       setIsLoading(true);
       
-      // Fetch product from Supabase
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_sizes(*),
-          product_colors(*),
-          reviews(*)
-        `)
-        .eq('id', id)
-        .single();
-      
-      if (error || !data) {
+      try {
+        // Fetch product from Supabase
+        const { data, error } = await supabase
+          .from('products')
+          .select(`
+            *,
+            product_sizes(*),
+            product_colors(*),
+            reviews(*)
+          `)
+          .eq('id', id)
+          .single();
+        
+        if (error || !data) {
+          toast({
+            title: 'Product Not Found',
+            description: 'Sorry, the product you are looking for does not exist.',
+            variant: 'destructive'
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Generate QR Code if not exists
+        if (!data.qr_code) {
+          const qrCode = await generateProductQRCode(data.id);
+          if (qrCode) {
+            data.qr_code = qrCode;
+          }
+        }
+
+        // Transform Supabase data to match our Product interface
+        const transformedProduct: Product = {
+          id: data.id,
+          name: data.name,
+          brand: data.brand,
+          category: data.category,
+          price: data.price,
+          salePrice: data.sale_price,
+          description: data.description,
+          images: data.images,
+          sizes: data.product_sizes,
+          colors: data.product_colors,
+          stock: data.stock,
+          rating: data.rating || 0,
+          reviews: data.reviews || [],
+          isFeatured: data.is_featured || false,
+          isTrending: data.is_trending || false,
+          createdAt: data.created_at
+        };
+        
+        setProduct(transformedProduct);
+        setSelectedImage(transformedProduct.images[0]);
+        
+        // Set default selections
+        const availableSize = transformedProduct.sizes.find(s => s.available);
+        if (availableSize) {
+          setSelectedSize(availableSize.value);
+        }
+        
+        const availableColor = transformedProduct.colors.find(c => c.available);
+        if (availableColor) {
+          setSelectedColor(availableColor.value);
+        }
+        
+        // Fetch related products
+        try {
+          const { data: related } = await supabase
+            .from('products')
+            .select('*, product_sizes(*), product_colors(*), reviews(*)')
+            .eq('category', transformedProduct.category)
+            .neq('id', transformedProduct.id)
+            .limit(3);
+          
+          if (related) {
+            // Transform related products data
+            const transformedRelated = related.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              brand: item.brand,
+              category: item.category,
+              price: item.price,
+              salePrice: item.sale_price,
+              description: item.description,
+              images: item.images,
+              sizes: item.product_sizes,
+              colors: item.product_colors,
+              stock: item.stock,
+              rating: item.rating || 0,
+              reviews: item.reviews || [],
+              isFeatured: item.is_featured || false,
+              isTrending: item.is_trending || false,
+              createdAt: item.created_at
+            }));
+            
+            setRelatedProducts(transformedRelated);
+          }
+        } catch (relatedError) {
+          console.error("Error fetching related products:", relatedError);
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
         toast({
-          title: 'Product Not Found',
-          description: 'Sorry, the product you are looking for does not exist.',
+          title: 'Error',
+          description: 'Failed to load product details.',
           variant: 'destructive'
         });
+      } finally {
         setIsLoading(false);
-        return;
       }
-
-      // Generate QR Code if not exists
-      if (!data.qr_code) {
-        const qrCode = await generateProductQRCode(data.id);
-        data.qr_code = qrCode;
-      }
-
-      setProduct(data);
-      setSelectedImage(data.images[0]);
-      
-      // Set default selections
-      const availableSize = data.product_sizes.find(s => s.available);
-      if (availableSize) {
-        setSelectedSize(availableSize.value);
-      }
-      
-      const availableColor = data.product_colors.find(c => c.available);
-      if (availableColor) {
-        setSelectedColor(availableColor.value);
-      }
-      
-      // Fetch related products
-      const { data: related } = await supabase
-        .from('products')
-        .select('*')
-        .eq('category', data.category)
-        .neq('id', data.id)
-        .limit(3);
-      
-      setRelatedProducts(related || []);
-      setIsLoading(false);
     };
 
     fetchProduct();
@@ -170,7 +231,7 @@ const ProductDetail = () => {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowQRCode(false)}>
             <div className="bg-white p-6 rounded-lg" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-xl font-bold mb-4">Product QR Code</h3>
-              <QRCode value={`https://shoemania.com/product/${product.id}`} size={256} />
+              <QRCodeSVG value={`https://shoemania.com/product/${product.id}`} size={256} />
               <p className="mt-4 text-center text-gray-600">Scan to view product details</p>
             </div>
           </div>

@@ -17,18 +17,43 @@ const Index = () => {
     window.scrollTo(0, 0);
     
     const fetchProducts = async () => {
-      const { data: products, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching products:', error);
-        return;
-      }
+      try {
+        const { data: products, error } = await supabase
+          .from('products')
+          .select('*, product_sizes(*), product_colors(*), reviews(*)');
+        
+        if (error) {
+          console.error('Error fetching products:', error);
+          return;
+        }
 
-      setFeaturedProducts(products.filter(p => p.is_featured));
-      setTrendingProducts(products.filter(p => p.is_trending));
+        if (products) {
+          // Transform Supabase data to match our Product interface
+          const transformedProducts = products.map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            price: product.price,
+            salePrice: product.sale_price,
+            description: product.description,
+            images: product.images,
+            sizes: product.product_sizes,
+            colors: product.product_colors,
+            stock: product.stock,
+            rating: product.rating,
+            reviews: product.reviews,
+            isFeatured: product.is_featured,
+            isTrending: product.is_trending,
+            createdAt: product.created_at
+          }));
+
+          setFeaturedProducts(transformedProducts.filter(p => p.isFeatured));
+          setTrendingProducts(transformedProducts.filter(p => p.isTrending));
+        }
+      } catch (error) {
+        console.error('Error in fetchProducts:', error);
+      }
     };
 
     fetchProducts();

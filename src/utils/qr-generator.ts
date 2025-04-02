@@ -27,6 +27,10 @@ export const fetchProductByQRCode = async (scannedUrl: string) => {
     // Extract product ID from the URL
     const productId = scannedUrl.split('/').pop();
     
+    if (!productId) {
+      throw new Error('Invalid QR code URL');
+    }
+    
     const { data, error } = await supabase
       .from('products')
       .select('*')

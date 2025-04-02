@@ -17,25 +17,6 @@ export interface Address {
   isDefault: boolean;
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  price: number;
-  salePrice?: number;
-  description: string;
-  images: string[];
-  sizes: ProductSize[];
-  colors: ProductColor[];
-  stock: number;
-  rating: number;
-  reviews: Review[];
-  isFeatured: boolean;
-  isTrending: boolean;
-  createdAt: string;
-}
-
 export interface ProductSize {
   id: string;
   value: string;
@@ -55,6 +36,25 @@ export interface Review {
   userName: string;
   rating: number;
   comment: string;
+  createdAt: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  salePrice?: number;
+  description: string;
+  images: string[];
+  sizes: ProductSize[];
+  colors: ProductColor[];
+  stock: number;
+  rating: number;
+  reviews: Review[];
+  isFeatured: boolean;
+  isTrending: boolean;
   createdAt: string;
 }
 

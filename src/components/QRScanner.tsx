@@ -6,11 +6,15 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
+interface ScanResult {
+  text: string;
+}
+
 const QRScanner: React.FC = () => {
   const [scanning, setScanning] = useState(false);
   const navigate = useNavigate();
 
-  const handleScan = async (result: any) => {
+  const handleScan = async (result: ScanResult | null) => {
     if (result) {
       try {
         const product = await fetchProductByQRCode(result.text);
@@ -41,8 +45,8 @@ const QRScanner: React.FC = () => {
     }
   };
 
-  const handleError = (err: any) => {
-    console.error(err);
+  const handleError = (error: Error) => {
+    console.error(error);
     toast({
       title: 'Camera Error',
       description: 'Unable to access camera. Please check permissions.',
@@ -64,7 +68,7 @@ const QRScanner: React.FC = () => {
           <QrReader
             constraints={{ facingMode: 'environment' }}
             onResult={handleScan}
-            onError={handleError}
+            scanDelay={500}
             containerStyle={{ width: '100%', height: '100%' }}
           />
           <div className="absolute inset-0 border-4 border-primary pointer-events-none"></div>
