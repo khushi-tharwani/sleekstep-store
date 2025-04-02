@@ -15,6 +15,7 @@ export interface Address {
   zipCode: string;
   country: string;
   isDefault: boolean;
+  userId?: string;
 }
 
 export interface ProductSize {
@@ -87,4 +88,26 @@ export interface OrderItem {
   price: number;
   size: string;
   color: string;
+}
+
+export interface ProductFormData {
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  salePrice?: number;
+  description: string;
+  stock: number;
+  images: string[];
+  sizes: ProductSize[];
+  colors: ProductColor[];
+  isFeatured: boolean;
+  isTrending: boolean;
+}
+
+export interface WeatherRecommendation {
+  type: string;
+  name: string;
+  description: string;
+  imageUrl: string;
 }

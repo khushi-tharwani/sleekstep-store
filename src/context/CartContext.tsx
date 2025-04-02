@@ -2,6 +2,8 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { CartItem, Product } from "../types";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -11,6 +13,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   subTotal: number;
+  saveOrderToDatabase: (addressId: string, paymentMethod: string) => Promise<string | null>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -18,6 +21,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
   
   // Load cart from localStorage on component mount
   useEffect(() => {
@@ -93,6 +97,74 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCartItems([]);
   };
   
+  // Save order to database
+  const saveOrderToDatabase = async (addressId: string, paymentMethod: string): Promise<string | null> => {
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to complete your order.",
+        variant: "destructive",
+      });
+      return null;
+    }
+    
+    try {
+      const subTotal = cartItems.reduce(
+        (total, item) => total + (item.product.salePrice || item.product.price) * item.quantity, 
+        0
+      );
+      
+      // First create the order
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total: subTotal,
+          address_id: addressId,
+          payment_method: paymentMethod,
+          status: 'processing'
+        })
+        .select('id')
+        .single();
+      
+      if (orderError) throw orderError;
+      
+      const orderId = orderData.id;
+      
+      // Then add order items
+      const orderItems = cartItems.map(item => ({
+        order_id: orderId,
+        product_id: item.productId,
+        quantity: item.quantity,
+        price: item.product.salePrice || item.product.price,
+        size: item.size,
+        color: item.color
+      }));
+      
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+      
+      if (itemsError) throw itemsError;
+      
+      toast({
+        title: "Order placed successfully!",
+        description: "Thank you for your purchase.",
+      });
+      
+      clearCart();
+      return orderId;
+    } catch (error: any) {
+      console.error("Error saving order:", error);
+      toast({
+        title: "Order failed",
+        description: error.message || "Failed to place your order. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+  
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   
   const subTotal = cartItems.reduce(
@@ -109,7 +181,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateQuantity,
         clearCart,
         totalItems,
-        subTotal
+        subTotal,
+        saveOrderToDatabase
       }}
     >
       {children}

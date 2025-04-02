@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,9 +16,14 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // If already authenticated, redirect to home
+  if (isAuthenticated && !authLoading) {
+    return <Navigate to="/" />;
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,17 +51,9 @@ const Register = () => {
     
     try {
       await register(name, email, password);
-      toast({
-        title: "Registration successful!",
-        description: "Welcome to SleekStep.",
-      });
       navigate("/");
     } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: "This email might already be in use.",
-        variant: "destructive",
-      });
+      // Error handling is done in the register function via toast
     } finally {
       setIsLoading(false);
     }
