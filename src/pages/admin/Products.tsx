@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -73,12 +72,17 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      // Fetch products with their related data (sizes, colors, reviews)
+      // Fetch products
       const { data: productsData, error } = await supabase
         .from('products')
         .select('*');
       
       if (error) throw error;
+
+      if (!productsData) {
+        setProducts([]);
+        return;
+      }
 
       // Fetch the related data for each product
       const productsWithRelations = await Promise.all(productsData.map(async (product) => {
@@ -276,6 +280,25 @@ const AdminProducts = () => {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
+      // Delete related sizes
+      await supabase
+        .from('product_sizes')
+        .delete()
+        .eq('product_id', id);
+      
+      // Delete related colors
+      await supabase
+        .from('product_colors')
+        .delete()
+        .eq('product_id', id);
+      
+      // Delete related reviews
+      await supabase
+        .from('reviews')
+        .delete()
+        .eq('product_id', id);
+        
+      // Delete the product
       const { error } = await supabase
         .from('products')
         .delete()
