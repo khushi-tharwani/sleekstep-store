@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCart } from "@/context/CartContext";
 import { Heart, ShoppingBag, Star, Truck, RotateCcw, QrCode } from "lucide-react";
-import { Product } from "@/types";
+import { Product, Review } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { generateProductQRCode } from "@/utils/qr-generator";
@@ -62,6 +62,16 @@ const ProductDetail = () => {
           }
         }
 
+        // Transform reviews to match our Review interface
+        const transformedReviews: Review[] = data.reviews ? data.reviews.map((review: any) => ({
+          id: review.id,
+          userId: review.user_id,
+          userName: review.user_name,
+          rating: review.rating,
+          comment: review.comment || "",
+          createdAt: review.created_at
+        })) : [];
+
         // Transform Supabase data to match our Product interface
         const transformedProduct: Product = {
           id: data.id,
@@ -76,7 +86,7 @@ const ProductDetail = () => {
           colors: data.product_colors,
           stock: data.stock,
           rating: data.rating || 0,
-          reviews: data.reviews || [],
+          reviews: transformedReviews,
           isFeatured: data.is_featured || false,
           isTrending: data.is_trending || false,
           createdAt: data.created_at
@@ -107,24 +117,36 @@ const ProductDetail = () => {
           
           if (related) {
             // Transform related products data
-            const transformedRelated = related.map((item: any) => ({
-              id: item.id,
-              name: item.name,
-              brand: item.brand,
-              category: item.category,
-              price: item.price,
-              salePrice: item.sale_price,
-              description: item.description,
-              images: item.images,
-              sizes: item.product_sizes,
-              colors: item.product_colors,
-              stock: item.stock,
-              rating: item.rating || 0,
-              reviews: item.reviews || [],
-              isFeatured: item.is_featured || false,
-              isTrending: item.is_trending || false,
-              createdAt: item.created_at
-            }));
+            const transformedRelated = related.map((item: any) => {
+              // Transform reviews for this related product
+              const productReviews: Review[] = item.reviews ? item.reviews.map((review: any) => ({
+                id: review.id,
+                userId: review.user_id,
+                userName: review.user_name,
+                rating: review.rating,
+                comment: review.comment || "",
+                createdAt: review.created_at
+              })) : [];
+              
+              return {
+                id: item.id,
+                name: item.name,
+                brand: item.brand,
+                category: item.category,
+                price: item.price,
+                salePrice: item.sale_price,
+                description: item.description,
+                images: item.images,
+                sizes: item.product_sizes,
+                colors: item.product_colors,
+                stock: item.stock,
+                rating: item.rating || 0,
+                reviews: productReviews,
+                isFeatured: item.is_featured || false,
+                isTrending: item.is_trending || false,
+                createdAt: item.created_at
+              };
+            });
             
             setRelatedProducts(transformedRelated);
           }

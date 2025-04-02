@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
-interface ScanResult {
+interface Result {
   text: string;
 }
 
@@ -14,8 +14,8 @@ const QRScanner: React.FC = () => {
   const [scanning, setScanning] = useState(false);
   const navigate = useNavigate();
 
-  const handleScan = async (result: ScanResult | null) => {
-    if (result) {
+  const handleScan = async (result: Result | null | undefined) => {
+    if (result?.text) {
       try {
         const product = await fetchProductByQRCode(result.text);
         
