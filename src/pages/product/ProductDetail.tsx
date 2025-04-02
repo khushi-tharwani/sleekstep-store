@@ -1,15 +1,15 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { products } from "@/data/products";
 import { useCart } from "@/context/CartContext";
-import { Heart, ShoppingBag, Star, Truck, RotateCcw } from "lucide-react";
+import { Heart, ShoppingBag, Star, Truck, RotateCcw, QrCode } from "lucide-react";
 import { Product } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
-import FeaturedProducts from "@/components/home/FeaturedProducts";
+import { supabase } from "@/integrations/supabase/client";
+import { generateProductQRCode } from "@/utils/qr-generator";
+import QRCode from 'qrcode.react';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,36 +22,68 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [showQRCode, setShowQRCode] = useState(false);
   
   useEffect(() => {
-    // Simulate API call
-    setIsLoading(true);
-    setTimeout(() => {
-      const foundProduct = products.find(p => p.id === id);
-      if (foundProduct) {
-        setProduct(foundProduct);
-        setSelectedImage(foundProduct.images[0]);
-        
-        // Set default selections
-        const availableSize = foundProduct.sizes.find(s => s.available);
-        if (availableSize) {
-          setSelectedSize(availableSize.value);
-        }
-        
-        const availableColor = foundProduct.colors.find(c => c.available);
-        if (availableColor) {
-          setSelectedColor(availableColor.value);
-        }
-        
-        // Get related products from same category
-        const related = products
-          .filter(p => p.id !== id && p.category === foundProduct.category)
-          .slice(0, 3);
-        setRelatedProducts(related);
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      
+      // Fetch product from Supabase
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_sizes(*),
+          product_colors(*),
+          reviews(*)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error || !data) {
+        toast({
+          title: 'Product Not Found',
+          description: 'Sorry, the product you are looking for does not exist.',
+          variant: 'destructive'
+        });
+        setIsLoading(false);
+        return;
       }
+
+      // Generate QR Code if not exists
+      if (!data.qr_code) {
+        const qrCode = await generateProductQRCode(data.id);
+        data.qr_code = qrCode;
+      }
+
+      setProduct(data);
+      setSelectedImage(data.images[0]);
+      
+      // Set default selections
+      const availableSize = data.product_sizes.find(s => s.available);
+      if (availableSize) {
+        setSelectedSize(availableSize.value);
+      }
+      
+      const availableColor = data.product_colors.find(c => c.available);
+      if (availableColor) {
+        setSelectedColor(availableColor.value);
+      }
+      
+      // Fetch related products
+      const { data: related } = await supabase
+        .from('products')
+        .select('*')
+        .eq('category', data.category)
+        .neq('id', data.id)
+        .limit(3);
+      
+      setRelatedProducts(related || []);
       setIsLoading(false);
-    }, 500);
-  }, [id]);
+    };
+
+    fetchProduct();
+  }, [id, toast]);
 
   const handleAddToCart = () => {
     if (!product || !selectedSize || !selectedColor) {
@@ -133,6 +165,17 @@ const ProductDetail = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-16">
+        {/* QR Code Modal */}
+        {showQRCode && product && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowQRCode(false)}>
+            <div className="bg-white p-6 rounded-lg" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-xl font-bold mb-4">Product QR Code</h3>
+              <QRCode value={`https://shoemania.com/product/${product.id}`} size={256} />
+              <p className="mt-4 text-center text-gray-600">Scan to view product details</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row gap-8">
           {/* Product Images */}
           <div className="w-full md:w-1/2">
@@ -284,6 +327,13 @@ const ProductDetail = () => {
               >
                 <ShoppingBag className="mr-2 h-5 w-5" />
                 {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-white/20 hover:bg-dark-200"
+                onClick={() => setShowQRCode(true)}
+              >
+                <QrCode className="h-5 w-5" />
               </Button>
               <Button variant="outline" className="border-white/20 hover:bg-dark-200">
                 <Heart className="h-5 w-5" />
