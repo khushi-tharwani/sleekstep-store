@@ -4,7 +4,7 @@ import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
 
@@ -119,7 +119,16 @@ const Login = () => {
               </Link>
             </p>
             
-            <div className="mt-6 border-t border-white/10 pt-4 text-xs text-gray-500 text-center">
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-gray-500">For admin access:</p>
+                <Link to="/admin-login" className="text-xs text-primary hover:underline">
+                  Admin Login
+                </Link>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-xs text-gray-500 text-center">
               <p>For demo purposes, use:</p>
               <p className="mt-1">Email: user@example.com</p>
               <p>Password: password123</p>

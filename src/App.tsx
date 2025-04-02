@@ -19,6 +19,7 @@ import OrdersPage from "./pages/orders/Orders";
 import AdminProducts from "./pages/admin/Products";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/auth/AdminRoute";
+import AdminLogin from "./pages/auth/AdminLogin";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/products" element={<Products />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/register" element={<Register />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />

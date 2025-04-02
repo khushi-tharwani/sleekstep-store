@@ -7,98 +7,115 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Scanner } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { products as mockProducts } from '@/data/products';
+import QRScanner from '@/components/QRScanner';
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [categories, setCategories] = useState<string[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
 
   // Fetch products with React Query
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      // Fetch products
-      const { data: productsData, error } = await supabase
-        .from('products')
-        .select('*');
-      
-      if (error) throw error;
+      try {
+        // Fetch products
+        const { data: productsData, error } = await supabase
+          .from('products')
+          .select('*');
+        
+        if (error) throw error;
 
-      if (!productsData) {
-        return [];
+        if (!productsData || productsData.length === 0) {
+          console.log("No products found in Supabase, using mock data");
+          
+          // If no products in database, use mock data
+          const uniqueCategories = [...new Set(mockProducts.map(p => p.category))];
+          setCategories(uniqueCategories);
+          
+          return mockProducts;
+        }
+
+        // Fetch the related data for each product
+        const productsWithRelations = await Promise.all(productsData.map(async (product) => {
+          // Fetch sizes for this product
+          const { data: sizesData } = await supabase
+            .from('product_sizes')
+            .select('*')
+            .eq('product_id', product.id);
+          
+          // Fetch colors for this product
+          const { data: colorsData } = await supabase
+            .from('product_colors')
+            .select('*')
+            .eq('product_id', product.id);
+          
+          // Fetch reviews for this product
+          const { data: reviewsData } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('product_id', product.id);
+          
+          // Transform database objects to match our interfaces
+          const sizes = (sizesData || []).map(size => ({
+            id: size.id,
+            value: size.value,
+            available: size.available || false
+          }));
+
+          const colors = (colorsData || []).map(color => ({
+            id: color.id,
+            name: color.name,
+            value: color.value,
+            available: color.available || false
+          }));
+
+          const reviews = (reviewsData || []).map(review => ({
+            id: review.id,
+            userId: review.user_id || '',
+            userName: review.user_name,
+            rating: review.rating,
+            comment: review.comment || '',
+            createdAt: review.created_at || ''
+          }));
+
+          // Transform the product to match our Product interface
+          return {
+            id: product.id,
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            price: product.price,
+            salePrice: product.sale_price,
+            description: product.description,
+            images: product.images || [],
+            sizes: sizes,
+            colors: colors,
+            stock: product.stock || 0,
+            rating: product.rating || 0,
+            reviews: reviews,
+            isFeatured: product.is_featured || false,
+            isTrending: product.is_trending || false,
+            createdAt: product.created_at || ''
+          } as Product;
+        }));
+        
+        // Extract unique categories
+        const uniqueCategories = [...new Set(productsWithRelations.map(p => p.category))];
+        setCategories(uniqueCategories);
+        
+        return productsWithRelations;
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        // Fallback to mock products if there's an error
+        const uniqueCategories = [...new Set(mockProducts.map(p => p.category))];
+        setCategories(uniqueCategories);
+        return mockProducts;
       }
-
-      // Fetch the related data for each product
-      const productsWithRelations = await Promise.all(productsData.map(async (product) => {
-        // Fetch sizes for this product
-        const { data: sizesData } = await supabase
-          .from('product_sizes')
-          .select('*')
-          .eq('product_id', product.id);
-        
-        // Fetch colors for this product
-        const { data: colorsData } = await supabase
-          .from('product_colors')
-          .select('*')
-          .eq('product_id', product.id);
-        
-        // Fetch reviews for this product
-        const { data: reviewsData } = await supabase
-          .from('reviews')
-          .select('*')
-          .eq('product_id', product.id);
-        
-        // Transform database objects to match our interfaces
-        const sizes = (sizesData || []).map(size => ({
-          id: size.id,
-          value: size.value,
-          available: size.available || false
-        }));
-
-        const colors = (colorsData || []).map(color => ({
-          id: color.id,
-          name: color.name,
-          value: color.value,
-          available: color.available || false
-        }));
-
-        const reviews = (reviewsData || []).map(review => ({
-          id: review.id,
-          userId: review.user_id || '',
-          userName: review.user_name,
-          rating: review.rating,
-          comment: review.comment || '',
-          createdAt: review.created_at || ''
-        }));
-
-        // Transform the product to match our Product interface
-        return {
-          id: product.id,
-          name: product.name,
-          brand: product.brand,
-          category: product.category,
-          price: product.price,
-          salePrice: product.sale_price,
-          description: product.description,
-          images: product.images || [],
-          sizes: sizes,
-          colors: colors,
-          stock: product.stock || 0,
-          rating: product.rating || 0,
-          reviews: reviews,
-          isFeatured: product.is_featured || false,
-          isTrending: product.is_trending || false,
-          createdAt: product.created_at || ''
-        } as Product;
-      }));
-      
-      // Extract unique categories
-      const uniqueCategories = [...new Set(productsWithRelations.map(p => p.category))];
-      setCategories(uniqueCategories);
-      
-      return productsWithRelations;
     }
   });
 
@@ -141,7 +158,22 @@ const Products = () => {
               ))}
             </select>
           </div>
+          
+          <Button 
+            onClick={() => setIsScanning(!isScanning)}
+            className="md:w-auto flex items-center gap-2"
+            variant="outline"
+          >
+            <Scanner className="h-4 w-4" />
+            {isScanning ? "Close Scanner" : "Scan QR Code"}
+          </Button>
         </div>
+        
+        {isScanning && (
+          <div className="my-6">
+            <QRScanner />
+          </div>
+        )}
         
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -180,6 +212,11 @@ const Products = () => {
                       SALE
                     </span>
                   )}
+                  
+                  <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs p-1 rounded-full flex items-center gap-1">
+                    <Scanner className="h-3 w-3" />
+                    <Gyroscope className="h-3 w-3" />
+                  </span>
                 </div>
                 
                 <div className="p-4">
