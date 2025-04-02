@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, User, Search, Menu, X } from "lucide-react";
@@ -9,7 +8,7 @@ import { Input } from "@/components/ui/input";
 
 const Navbar = () => {
   const { totalItems } = useCart();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -32,6 +31,11 @@ const Navbar = () => {
               <Link to="/categories" className="text-white hover:text-emerald transition-colors">
                 Categories
               </Link>
+              {isAdmin && (
+                <Link to="/admin/products" className="text-white hover:text-emerald transition-colors">
+                  Admin
+                </Link>
+              )}
             </nav>
           </div>
 
@@ -123,7 +127,6 @@ const Navbar = () => {
             )}
           </div>
           
-          {/* Mobile menu button */}
           <div className="flex items-center gap-4 md:hidden">
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative">
@@ -146,7 +149,6 @@ const Navbar = () => {
         </div>
       </div>
       
-      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-background border-t border-white/10">
           <div className="px-4 py-3 space-y-1">
@@ -172,78 +174,86 @@ const Navbar = () => {
               Categories
             </Link>
             
-            <div className="pt-4 pb-3 border-t border-white/10">
-              {isAuthenticated ? (
-                <>
-                  <div className="flex items-center px-3">
-                    <div className="flex-shrink-0">
-                      {user?.avatar && (
-                        <img 
-                          src={user.avatar} 
-                          alt={user.name} 
-                          className="h-10 w-10 rounded-full"
-                        />
-                      )}
-                    </div>
-                    <div className="ml-3">
-                      <div className="text-base font-medium">{user?.name}</div>
-                      <div className="text-sm text-muted-foreground">{user?.email}</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 space-y-1 px-3">
-                    <Link 
-                      to="/profile" 
-                      className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      My Profile
-                    </Link>
-                    <Link 
-                      to="/orders" 
-                      className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      My Orders
-                    </Link>
-                    {user?.role === "admin" && (
-                      <Link 
-                        to="/admin" 
-                        className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Admin Dashboard
-                      </Link>
+            {isAdmin && (
+              <Link 
+                to="/admin/products" 
+                className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin Dashboard
+              </Link>
+            )}
+            
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center px-3">
+                  <div className="flex-shrink-0">
+                    {user?.avatar && (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.name} 
+                        className="h-10 w-10 rounded-full"
+                      />
                     )}
-                    <button 
-                      onClick={() => {
-                        logout();
-                        setIsMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-destructive hover:bg-secondary"
-                    >
-                      Logout
-                    </button>
                   </div>
-                </>
-              ) : (
+                  <div className="ml-3">
+                    <div className="text-base font-medium">{user?.name}</div>
+                    <div className="text-sm text-muted-foreground">{user?.email}</div>
+                  </div>
+                </div>
                 <div className="mt-3 space-y-1 px-3">
                   <Link 
-                    to="/login" 
+                    to="/profile" 
                     className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Log in
+                    My Profile
                   </Link>
                   <Link 
-                    to="/register" 
-                    className="block px-3 py-2 rounded-md text-base font-medium bg-primary hover:bg-primary/90 text-white text-center"
+                    to="/orders" 
+                    className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Sign up
+                    My Orders
                   </Link>
+                  {user?.role === "admin" && (
+                    <Link 
+                      to="/admin" 
+                      className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <button 
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-destructive hover:bg-secondary"
+                  >
+                    Logout
+                  </button>
                 </div>
-              )}
-            </div>
+              </>
+            ) : (
+              <div className="mt-3 space-y-1 px-3">
+                <Link 
+                  to="/login" 
+                  className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Log in
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="block px-3 py-2 rounded-md text-base font-medium bg-primary hover:bg-primary/90 text-white text-center"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

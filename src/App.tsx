@@ -8,6 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 
 import Index from "./pages/Index";
+import Products from "./pages/Products";
 import ProductDetail from "./pages/product/ProductDetail";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -17,6 +18,7 @@ import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import OrdersPage from "./pages/orders/Orders";
 import AdminProducts from "./pages/admin/Products";
 import NotFound from "./pages/NotFound";
+import AdminRoute from "./components/auth/AdminRoute";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -31,6 +33,7 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/products" element={<Products />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -38,7 +41,7 @@ const App = () => (
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/orders" element={<OrdersPage />} />
-              <Route path="/admin/products" element={<AdminProducts />} />
+              <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </CartProvider>
