@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
@@ -7,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { Search, Filter, Scanner } from 'lucide-react';
+import { Search, Filter, QrCode, Compass } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { products as mockProducts } from '@/data/products';
 import QRScanner from '@/components/QRScanner';
@@ -18,12 +17,10 @@ const Products = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isScanning, setIsScanning] = useState(false);
 
-  // Fetch products with React Query
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       try {
-        // Fetch products
         const { data: productsData, error } = await supabase
           .from('products')
           .select('*');
@@ -33,34 +30,28 @@ const Products = () => {
         if (!productsData || productsData.length === 0) {
           console.log("No products found in Supabase, using mock data");
           
-          // If no products in database, use mock data
           const uniqueCategories = [...new Set(mockProducts.map(p => p.category))];
           setCategories(uniqueCategories);
           
           return mockProducts;
         }
 
-        // Fetch the related data for each product
         const productsWithRelations = await Promise.all(productsData.map(async (product) => {
-          // Fetch sizes for this product
           const { data: sizesData } = await supabase
             .from('product_sizes')
             .select('*')
             .eq('product_id', product.id);
           
-          // Fetch colors for this product
           const { data: colorsData } = await supabase
             .from('product_colors')
             .select('*')
             .eq('product_id', product.id);
           
-          // Fetch reviews for this product
           const { data: reviewsData } = await supabase
             .from('reviews')
             .select('*')
             .eq('product_id', product.id);
           
-          // Transform database objects to match our interfaces
           const sizes = (sizesData || []).map(size => ({
             id: size.id,
             value: size.value,
@@ -83,7 +74,6 @@ const Products = () => {
             createdAt: review.created_at || ''
           }));
 
-          // Transform the product to match our Product interface
           return {
             id: product.id,
             name: product.name,
@@ -104,14 +94,12 @@ const Products = () => {
           } as Product;
         }));
         
-        // Extract unique categories
         const uniqueCategories = [...new Set(productsWithRelations.map(p => p.category))];
         setCategories(uniqueCategories);
         
         return productsWithRelations;
       } catch (error) {
         console.error("Error fetching products:", error);
-        // Fallback to mock products if there's an error
         const uniqueCategories = [...new Set(mockProducts.map(p => p.category))];
         setCategories(uniqueCategories);
         return mockProducts;
@@ -119,7 +107,6 @@ const Products = () => {
     }
   });
 
-  // Filter products based on search and category
   const filteredProducts = products?.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,7 +151,7 @@ const Products = () => {
             className="md:w-auto flex items-center gap-2"
             variant="outline"
           >
-            <Scanner className="h-4 w-4" />
+            <QrCode className="h-4 w-4" />
             {isScanning ? "Close Scanner" : "Scan QR Code"}
           </Button>
         </div>
@@ -214,8 +201,8 @@ const Products = () => {
                   )}
                   
                   <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs p-1 rounded-full flex items-center gap-1">
-                    <Scanner className="h-3 w-3" />
-                    <Gyroscope className="h-3 w-3" />
+                    <QrCode className="h-3 w-3" />
+                    <Compass className="h-3 w-3" />
                   </span>
                 </div>
                 

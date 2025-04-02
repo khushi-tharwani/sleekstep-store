@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +13,7 @@ import { generateProductQRCode } from "@/utils/qr-generator";
 import { toast } from "@/components/ui/use-toast";
 import QRScanner from "@/components/QRScanner";
 import GyroscopeViewer from "@/components/product/GyroscopeViewer";
-import { Scanner } from "lucide-react";
+import { QrCode } from "lucide-react";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +33,6 @@ const ProductDetail = () => {
       if (!id) return null;
       
       try {
-        // Fetch product data
         const { data: productData, error } = await supabase
           .from("products")
           .select("*")
@@ -46,25 +44,21 @@ const ProductDetail = () => {
         }
 
         if (productData) {
-          // Fetch sizes
           const { data: sizesData } = await supabase
             .from("product_sizes")
             .select("*")
             .eq("product_id", id);
 
-          // Fetch colors
           const { data: colorsData } = await supabase
             .from("product_colors")
             .select("*")
             .eq("product_id", id);
 
-          // Fetch reviews
           const { data: reviewsData } = await supabase
             .from("reviews")
             .select("*")
             .eq("product_id", id);
 
-          // Transform to match Product interface
           const product: Product = {
             id: productData.id,
             name: productData.name,
@@ -100,7 +94,6 @@ const ProductDetail = () => {
             createdAt: productData.created_at,
           };
 
-          // Set initial selections
           const availableSize = product.sizes.find((size) => size.available);
           const availableColor = product.colors.find((color) => color.available);
           
@@ -114,11 +107,9 @@ const ProductDetail = () => {
           return product;
         }
         
-        // If no product found in database, try mock data
         return mockProducts.find((p) => p.id === id) || null;
       } catch (error) {
         console.error("Error fetching product:", error);
-        // Try to find the product in our mock data as fallback
         return mockProducts.find((p) => p.id === id) || null;
       }
     },
@@ -268,7 +259,7 @@ const ProductDetail = () => {
                 variant="outline"
                 className="flex items-center gap-2"
               >
-                <Scanner className="h-4 w-4" />
+                <QrCode className="h-4 w-4" />
                 Scan QR
               </Button>
             </div>
@@ -329,12 +320,12 @@ const ProductDetail = () => {
             
             <ProductOptions
               product={product}
-              selectedSize={selectedSize}
-              setSelectedSize={setSelectedSize}
-              selectedColor={selectedColor}
-              setSelectedColor={setSelectedColor}
-              quantity={quantity}
-              setQuantity={setQuantity}
+              onSizeChange={setSelectedSize}
+              onColorChange={setSelectedColor}
+              onQuantityChange={setQuantity}
+              currentSize={selectedSize}
+              currentColor={selectedColor}
+              currentQuantity={quantity}
             />
             
             <Button 

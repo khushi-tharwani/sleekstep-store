@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Gyroscope } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface GyroscopeViewerProps {
@@ -11,7 +11,6 @@ const GyroscopeViewer: React.FC<GyroscopeViewerProps> = ({ images }) => {
   const [active, setActive] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [deviceOrientation, setDeviceOrientation] = useState({ alpha: 0, beta: 0, gamma: 0 });
-  const requestRef = useRef<number>();
   
   // Function to handle device orientation changes
   const handleOrientation = (event: DeviceOrientationEvent) => {
@@ -38,19 +37,27 @@ const GyroscopeViewer: React.FC<GyroscopeViewerProps> = ({ images }) => {
     try {
       if (!active) {
         // Request permission to access device orientation
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-          const permissionState = await DeviceOrientationEvent.requestPermission();
-          
-          if (permissionState === 'granted') {
+        // Check if the browser supports DeviceOrientationEvent
+        if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+          // Modern browsers require permission on iOS 13+
+          // But not all browsers implement requestPermission
+          const requestPermission = (DeviceOrientationEvent as any).requestPermission;
+          if (requestPermission && typeof requestPermission === 'function') {
+            const permissionState = await requestPermission();
+            
+            if (permissionState === 'granted') {
+              window.addEventListener('deviceorientation', handleOrientation);
+              setActive(true);
+            } else {
+              alert('Permission to access device orientation was denied');
+            }
+          } else {
+            // For devices that don't require permission (older devices, desktop)
             window.addEventListener('deviceorientation', handleOrientation);
             setActive(true);
-          } else {
-            alert('Permission to access device orientation was denied');
           }
         } else {
-          // For devices that don't require permission (older devices, desktop)
-          window.addEventListener('deviceorientation', handleOrientation);
-          setActive(true);
+          alert('Device orientation is not supported by your browser');
         }
       } else {
         // Turn off gyroscope
@@ -94,7 +101,7 @@ const GyroscopeViewer: React.FC<GyroscopeViewerProps> = ({ images }) => {
           variant={active ? "destructive" : "outline"}
           className="flex items-center gap-2"
         >
-          <Gyroscope className="h-4 w-4" />
+          <Compass className="h-4 w-4" />
           {active ? "Disable" : "Enable"} Gyroscope View
         </Button>
       </div>
