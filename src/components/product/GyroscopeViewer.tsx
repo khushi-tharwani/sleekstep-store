@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Compass } from 'lucide-react';
 import { Button } from '../ui/button';
+import { toast } from '@/components/ui/use-toast';
 
 interface GyroscopeViewerProps {
   images: string[];
@@ -14,6 +15,13 @@ const GyroscopeViewer: React.FC<GyroscopeViewerProps> = ({ images }) => {
   
   // Function to handle device orientation changes
   const handleOrientation = (event: DeviceOrientationEvent) => {
+    // Log data to debug
+    console.log("Device orientation:", { 
+      alpha: event.alpha, 
+      beta: event.beta, 
+      gamma: event.gamma 
+    });
+    
     setDeviceOrientation({
       alpha: event.alpha || 0, // Z-axis rotation (compass direction)
       beta: event.beta || 0,   // X-axis rotation (front-to-back tilt)
@@ -36,37 +44,91 @@ const GyroscopeViewer: React.FC<GyroscopeViewerProps> = ({ images }) => {
   const toggleGyroscope = async () => {
     try {
       if (!active) {
-        // Request permission to access device orientation
         // Check if the browser supports DeviceOrientationEvent
         if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
           // Modern browsers require permission on iOS 13+
-          // But not all browsers implement requestPermission
-          const requestPermission = (DeviceOrientationEvent as any).requestPermission;
-          if (requestPermission && typeof requestPermission === 'function') {
-            const permissionState = await requestPermission();
+          if ((DeviceOrientationEvent as any).requestPermission && 
+              typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+            console.log("Requesting device orientation permission");
+            const permissionState = await (DeviceOrientationEvent as any).requestPermission();
             
             if (permissionState === 'granted') {
               window.addEventListener('deviceorientation', handleOrientation);
               setActive(true);
+              toast({
+                title: 'Gyroscope Active',
+                description: 'Tilt your device to view different angles',
+              });
             } else {
-              alert('Permission to access device orientation was denied');
+              toast({
+                title: 'Permission Denied',
+                description: 'Permission to access device orientation was denied',
+                variant: 'destructive'
+              });
             }
           } else {
-            // For devices that don't require permission (older devices, desktop)
+            // For devices that don't require permission
             window.addEventListener('deviceorientation', handleOrientation);
             setActive(true);
+            toast({
+              title: 'Gyroscope Active',
+              description: 'Tilt your device to view different angles',
+            });
+            
+            // Test if events are actually firing
+            setTimeout(() => {
+              if (deviceOrientation.alpha === 0 && 
+                  deviceOrientation.beta === 0 && 
+                  deviceOrientation.gamma === 0) {
+                toast({
+                  title: 'No Orientation Data',
+                  description: 'Your device may not support gyroscope features',
+                  variant: 'destructive'
+                });
+                
+                // Fallback to manual rotation
+                setActive(false);
+                window.removeEventListener('deviceorientation', handleOrientation);
+              }
+            }, 1000);
           }
         } else {
-          alert('Device orientation is not supported by your browser');
+          toast({
+            title: 'Not Supported',
+            description: 'Device orientation is not supported by your browser',
+            variant: 'destructive'
+          });
         }
       } else {
         // Turn off gyroscope
         window.removeEventListener('deviceorientation', handleOrientation);
         setActive(false);
+        toast({
+          title: 'Gyroscope Disabled',
+          description: 'Returned to standard view',
+        });
       }
     } catch (error) {
       console.error('Error accessing device orientation:', error);
-      alert('Your device or browser may not support gyroscope features');
+      toast({
+        title: 'Error',
+        description: 'Your device or browser may not support gyroscope features',
+        variant: 'destructive'
+      });
+      setActive(false);
+    }
+  };
+  
+  // Manual image navigation when gyroscope is not available
+  const navigateImages = (direction: 'next' | 'prev') => {
+    if (direction === 'next') {
+      setCurrentImageIndex((prev) => 
+        prev < images.length - 1 ? prev + 1 : 0
+      );
+    } else {
+      setCurrentImageIndex((prev) => 
+        prev > 0 ? prev - 1 : images.length - 1
+      );
     }
   };
   
@@ -95,7 +157,7 @@ const GyroscopeViewer: React.FC<GyroscopeViewerProps> = ({ images }) => {
         </div>
       )}
       
-      <div className="mt-4 flex justify-center">
+      <div className="mt-4 flex justify-center gap-2">
         <Button
           onClick={toggleGyroscope}
           variant={active ? "destructive" : "outline"}
@@ -104,7 +166,24 @@ const GyroscopeViewer: React.FC<GyroscopeViewerProps> = ({ images }) => {
           <Compass className="h-4 w-4" />
           {active ? "Disable" : "Enable"} Gyroscope View
         </Button>
+        
+        {!active && (
+          <div className="flex gap-2">
+            <Button onClick={() => navigateImages('prev')} variant="secondary">
+              Previous
+            </Button>
+            <Button onClick={() => navigateImages('next')} variant="secondary">
+              Next
+            </Button>
+          </div>
+        )}
       </div>
+      
+      <p className="text-xs text-center text-muted-foreground mt-2">
+        {active 
+          ? "Tilt your device to view different angles" 
+          : "Enable gyroscope or use buttons to rotate view"}
+      </p>
     </div>
   );
 };

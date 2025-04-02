@@ -6,13 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
-// We're removing our custom Result interface since it doesn't match the library's type
-
 const QRScanner: React.FC = () => {
   const [scanning, setScanning] = useState(false);
   const navigate = useNavigate();
 
-  // Update the handler to work with the library's result type
   const handleScan = async (result: any) => {
     if (result) {
       try {
@@ -20,7 +17,14 @@ const QRScanner: React.FC = () => {
         const scannedText = typeof result === 'string' ? result : result?.text;
         
         if (scannedText) {
-          const product = await fetchProductByQRCode(scannedText);
+          console.log("Scanned QR code:", scannedText);
+          
+          // Extract product ID if it's a URL
+          const productId = scannedText.includes('/product/') 
+            ? scannedText.split('/product/').pop() 
+            : scannedText;
+            
+          const product = await fetchProductByQRCode(productId);
           
           if (product) {
             toast({
@@ -39,6 +43,7 @@ const QRScanner: React.FC = () => {
         
         setScanning(false);
       } catch (error) {
+        console.error("QR Scanning error:", error);
         toast({
           title: 'Scanning Error',
           description: 'Unable to process the QR code.',
@@ -50,18 +55,33 @@ const QRScanner: React.FC = () => {
   };
 
   const handleError = (error: Error) => {
-    console.error(error);
+    console.error("Camera error:", error);
     toast({
       title: 'Camera Error',
       description: 'Unable to access camera. Please check permissions.',
       variant: 'destructive'
     });
+    setScanning(false);
+  };
+
+  const requestCameraPermission = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      setScanning(true);
+    } catch (error) {
+      console.error("Camera permission error:", error);
+      toast({
+        title: 'Camera Access Denied',
+        description: 'Please grant camera permission to use the QR scanner.',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
       <Button 
-        onClick={() => setScanning(!scanning)}
+        onClick={() => scanning ? setScanning(false) : requestCameraPermission()}
         className="mb-4 w-full"
       >
         {scanning ? 'Stop Scanning' : 'Start QR Scanner'}
@@ -72,8 +92,11 @@ const QRScanner: React.FC = () => {
           <QrReader
             constraints={{ facingMode: 'environment' }}
             onResult={handleScan}
+            onError={handleError}
             scanDelay={500}
             containerStyle={{ width: '100%', height: '100%' }}
+            videoStyle={{ width: '100%', height: '100%' }}
+            videoId="qr-video-element"
           />
           <div className="absolute inset-0 border-4 border-primary pointer-events-none"></div>
         </div>

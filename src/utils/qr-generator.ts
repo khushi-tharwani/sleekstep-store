@@ -2,19 +2,27 @@
 import { supabase } from "@/integrations/supabase/client";
 import QRCode from 'qrcode';
 import { Product } from "@/types";
+import { products as mockProducts } from "@/data/products";
 
 export const generateProductQRCode = async (productId: string): Promise<string | null> => {
   try {
-    // Generate a QR code data URL
+    // Generate a QR code data URL for the product
+    console.log("Generating QR code for product ID:", productId);
     const qrCodeUrl = await QRCode.toDataURL(`https://shoemania.com/product/${productId}`);
     
-    // Update the product in Supabase with the QR code
-    const { error } = await supabase
-      .from('products')
-      .update({ qr_code: qrCodeUrl })
-      .eq('id', productId);
-    
-    if (error) throw error;
+    try {
+      // Try to update the product in Supabase with the QR code
+      const { error } = await supabase
+        .from('products')
+        .update({ qr_code: qrCodeUrl })
+        .eq('id', productId);
+      
+      if (error) {
+        console.warn('Could not update product in Supabase, but generated QR code:', error);
+      }
+    } catch (dbError) {
+      console.warn('Database operation failed but QR code was generated:', dbError);
+    }
     
     return qrCodeUrl;
   } catch (error) {
@@ -23,50 +31,79 @@ export const generateProductQRCode = async (productId: string): Promise<string |
   }
 };
 
-export const fetchProductByQRCode = async (scannedUrl: string): Promise<Product | null> => {
+export const fetchProductByQRCode = async (scannedInput: string): Promise<Product | null> => {
   try {
-    // Extract product ID from the URL
-    const productId = scannedUrl.split('/').pop();
+    console.log("Fetching product by ID or URL:", scannedInput);
     
+    // Extract product ID if it's a URL or use as is
+    const productId = scannedInput.includes('/product/') 
+      ? scannedInput.split('/product/').pop() 
+      : scannedInput;
+      
     if (!productId) {
-      throw new Error('Invalid QR code URL');
+      throw new Error('Invalid QR code input');
     }
     
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single();
-    
-    if (error) throw error;
-    
-    // Transform the data to match our Product interface
-    if (data) {
-      const product: Product = {
-        id: data.id,
-        name: data.name,
-        brand: data.brand,
-        category: data.category,
-        price: data.price,
-        salePrice: data.sale_price,
-        description: data.description,
-        images: data.images,
-        sizes: [],  // We'll need to fetch these separately or adjust the query
-        colors: [],  // We'll need to fetch these separately or adjust the query
-        stock: data.stock,
-        rating: data.rating || 0,
-        reviews: [],  // We'll need to fetch these separately or adjust the query
-        isFeatured: data.is_featured || false,
-        isTrending: data.is_trending || false,
-        createdAt: data.created_at
-      };
+    // Try to fetch from Supabase first
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .single();
       
-      return product;
+      if (error) {
+        console.log("Supabase fetch error:", error);
+        // If Supabase fails, fall back to mock data
+        const mockProduct = mockProducts.find(p => p.id === productId);
+        
+        if (mockProduct) {
+          console.log("Found product in mock data:", mockProduct.name);
+          return mockProduct;
+        }
+        
+        throw error;
+      }
+      
+      // Transform the data to match our Product interface
+      if (data) {
+        console.log("Found product in Supabase:", data.name);
+        const product: Product = {
+          id: data.id,
+          name: data.name,
+          brand: data.brand,
+          category: data.category,
+          price: data.price,
+          salePrice: data.sale_price,
+          description: data.description,
+          images: data.images || [],
+          sizes: [],  // These would need to be fetched separately
+          colors: [],  // These would need to be fetched separately
+          stock: data.stock || 0,
+          rating: data.rating || 0,
+          reviews: [],  // These would need to be fetched separately
+          isFeatured: data.is_featured || false,
+          isTrending: data.is_trending || false,
+          createdAt: data.created_at
+        };
+        
+        return product;
+      }
+    } catch (dbError) {
+      console.warn("Error fetching from database, trying mock data:", dbError);
+    }
+    
+    // Fallback to mock data
+    const mockProduct = mockProducts.find(p => p.id === productId);
+    
+    if (mockProduct) {
+      console.log("Found product in mock data:", mockProduct.name);
+      return mockProduct;
     }
     
     return null;
   } catch (error) {
-    console.error('Error fetching product:', error);
+    console.error('Error in fetchProductByQRCode:', error);
     return null;
   }
 };
