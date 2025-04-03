@@ -54,14 +54,22 @@ const QRScanner: React.FC = () => {
     }
   };
 
-  const handleError = (error: Error) => {
-    console.error("Camera error:", error);
-    toast({
-      title: 'Camera Error',
-      description: 'Unable to access camera. Please check permissions.',
-      variant: 'destructive'
-    });
-    setScanning(false);
+  // This function will be passed to the onResult property
+  // but will also handle errors internally
+  const handleResult = async (result: any, error: any) => {
+    if (error) {
+      console.error("Camera error:", error);
+      toast({
+        title: 'Camera Error',
+        description: 'Unable to access camera. Please check permissions.',
+        variant: 'destructive'
+      });
+      setScanning(false);
+      return;
+    }
+    
+    // If no error, process the scan result
+    await handleScan(result);
   };
 
   const requestCameraPermission = async () => {
@@ -91,8 +99,7 @@ const QRScanner: React.FC = () => {
         <div className="relative w-full aspect-square">
           <QrReader
             constraints={{ facingMode: 'environment' }}
-            onResult={handleScan}
-            onError={handleError}
+            onResult={handleResult}
             scanDelay={500}
             containerStyle={{ width: '100%', height: '100%' }}
             videoStyle={{ width: '100%', height: '100%' }}
