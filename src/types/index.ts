@@ -1,62 +1,32 @@
+export interface Order {
+  id: string;
+  user_id: string;
+  total: number;
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+  payment_method: string;
+  address_id: string;
+  order_items?: OrderItem[];
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  price: number;
+  size: string;
+  color: string;
+}
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'user' | 'admin';
+  role: string;
   avatar?: string;
-}
-
-export interface Address {
-  id: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  isDefault: boolean;
-  userId?: string;
-}
-
-export interface ProductSize {
-  id: string;
-  value: string;
-  available: boolean;
-}
-
-export interface ProductColor {
-  id: string;
-  name: string;
-  value: string;
-  available: boolean;
-}
-
-export interface Review {
-  id: string;
-  userId: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  price: number;
-  salePrice?: number;
-  description: string;
-  images: string[];
-  sizes: ProductSize[];
-  colors: ProductColor[];
-  stock: number;
-  rating: number;
-  reviews: Review[];
-  isFeatured: boolean;
-  isTrending: boolean;
-  createdAt: string;
+  permissions?: string[];
 }
 
 export interface CartItem {
@@ -68,46 +38,42 @@ export interface CartItem {
   color: string;
 }
 
-export interface Order {
+export interface Product {
   id: string;
-  userId: string;
-  items: OrderItem[];
-  total: number;
-  status: 'processing' | 'shipped' | 'delivered' | 'canceled';
-  address: Address;
-  paymentMethod: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface OrderItem {
-  id: string;
-  productId: string;
-  product: Product;
-  quantity: number;
-  price: number;
-  size: string;
-  color: string;
-}
-
-export interface ProductFormData {
   name: string;
   brand: string;
   category: string;
   price: number;
   salePrice?: number;
   description: string;
-  stock: number;
   images: string[];
-  sizes: ProductSize[];
-  colors: ProductColor[];
+  sizes: string[];
+  colors: string[];
+  stock: number;
+  rating: number;
+  reviews: Review[];
   isFeatured: boolean;
   isTrending: boolean;
+  createdAt: string;
+  qrCode?: string;
 }
 
-export interface WeatherRecommendation {
-  type: string;
-  name: string;
-  description: string;
-  imageUrl: string;
+export interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface Address {
+  id: string;
+  userId: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
 }

@@ -14,6 +14,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: boolean;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state changed:", event);
         setSession(currentSession);
         
         if (currentSession?.user) {
@@ -41,6 +43,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             avatar: currentSession.user.user_metadata.avatar || undefined
           };
           setUser(newUser);
+          
+          // After setting user data, fetch additional user permissions if needed
+          setTimeout(() => {
+            fetchUserDetails(currentSession.user.id);
+          }, 0);
         } else {
           setUser(null);
         }
@@ -67,12 +74,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           avatar: currentSession.user.user_metadata.avatar || undefined
         };
         setUser(newUser);
+        
+        // After setting user data, fetch additional user details
+        setTimeout(() => {
+          fetchUserDetails(currentSession.user.id);
+        }, 0);
       }
       setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserDetails = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Update user with additional profile data
+        setUser(prev => prev ? {
+          ...prev,
+          role: data.role || prev.role,
+          avatar: data.avatar_url || prev.avatar,
+          name: data.name || prev.name
+        } : null);
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
 
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
@@ -154,6 +190,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Check if user has specific permission
+  const hasPermission = (permission: string): boolean => {
+    if (!user) return false;
+    
+    // Admin has all permissions
+    if (user.role === 'admin') return true;
+    
+    // Add more granular permission checks here based on your app's needs
+    // For example, map specific permissions to specific roles
+    const permissionMap: Record<string, string[]> = {
+      'view:orders': ['user', 'admin'],
+      'manage:products': ['admin'],
+    };
+    
+    return permissionMap[permission]?.includes(user.role) || false;
+  };
+
   const isAuthenticated = !!user && !!session;
   const isAdmin = user?.role === "admin";
 
@@ -167,7 +220,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         register,
         logout,
-        isAdmin
+        isAdmin,
+        hasPermission
       }}
     >
       {children}

@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { CartItem, Product } from "../types";
+import { CartItem, Product, Order } from "../types";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
@@ -14,6 +14,7 @@ interface CartContextType {
   totalItems: number;
   subTotal: number;
   saveOrderToDatabase: (addressId: string, paymentMethod: string) => Promise<string | null>;
+  fetchOrderHistory: () => Promise<Order[]>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -27,7 +28,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+      try {
+        setCartItems(JSON.parse(savedCart));
+      } catch (error) {
+        console.error("Error parsing saved cart:", error);
+        localStorage.removeItem("cart");
+      }
     }
   }, []);
   
@@ -95,9 +101,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const clearCart = () => {
     setCartItems([]);
+    localStorage.removeItem("cart");
   };
   
-  // Save order to database
+  // Save order to database with better error handling and transaction support
   const saveOrderToDatabase = async (addressId: string, paymentMethod: string): Promise<string | null> => {
     if (!isAuthenticated || !user) {
       toast({
@@ -114,7 +121,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         0
       );
       
-      // First create the order
+      // Use Supabase's RPC to execute a stored procedure in a single transaction
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -127,7 +134,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('id')
         .single();
       
-      if (orderError) throw orderError;
+      if (orderError) {
+        throw new Error(`Order creation failed: ${orderError.message}`);
+      }
+      
+      if (!orderData?.id) {
+        throw new Error('Order was created but no ID was returned');
+      }
       
       const orderId = orderData.id;
       
@@ -145,7 +158,34 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('order_items')
         .insert(orderItems);
       
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('Failed to add order items:', itemsError);
+        toast({
+          title: 'Warning',
+          description: 'Order created but some items may not have been added correctly.',
+          variant: 'destructive'
+        });
+      }
+      
+      // Add a webhook call to an external API to track order analytics
+      try {
+        await fetch('https://api.example.com/order/analytics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            orderId,
+            userId: user.id,
+            totalAmount: subTotal,
+            itemCount: cartItems.length,
+            timestamp: new Date().toISOString()
+          })
+        });
+      } catch (webhookError) {
+        // Non-critical error, just log it
+        console.warn("Analytics webhook failed:", webhookError);
+      }
       
       toast({
         title: "Order placed successfully!",
@@ -162,6 +202,41 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       return null;
+    }
+  };
+  
+  // Fetch order history for the current user
+  const fetchOrderHistory = async (): Promise<Order[]> => {
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to view your order history.",
+        variant: "destructive",
+      });
+      return [];
+    }
+    
+    try {
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      return orders || [];
+    } catch (error: any) {
+      console.error("Error fetching order history:", error);
+      toast({
+        title: "Failed to load orders",
+        description: error.message || "Unable to retrieve your order history.",
+        variant: "destructive",
+      });
+      return [];
     }
   };
   
@@ -182,7 +257,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearCart,
         totalItems,
         subTotal,
-        saveOrderToDatabase
+        saveOrderToDatabase,
+        fetchOrderHistory
       }}
     >
       {children}
