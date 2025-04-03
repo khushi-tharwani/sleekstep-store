@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -18,7 +17,7 @@ const UserProfile = () => {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { fetchOrderHistory } = useCart();
+  const { fetchOrders } = useCart();
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -37,8 +36,21 @@ const UserProfile = () => {
     const loadOrders = async () => {
       setLoadingOrders(true);
       try {
-        const orderHistory = await fetchOrderHistory();
-        setOrders(orderHistory);
+        await fetchOrders();
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*, order_items(*)')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        if (data) {
+          setOrders(data.map(order => ({
+            ...order,
+            status: order.status as 'processing' | 'shipped' | 'delivered' | 'cancelled'
+          })));
+        }
       } catch (error) {
         console.error("Failed to load orders:", error);
       } finally {
@@ -49,14 +61,13 @@ const UserProfile = () => {
     if (user) {
       loadOrders();
     }
-  }, [user, fetchOrderHistory]);
+  }, [user, fetchOrders]);
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files ? event.target.files[0] : null;
     if (file) {
       setAvatarFile(file);
       
-      // Create a preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatar(reader.result as string);
@@ -70,28 +81,24 @@ const UserProfile = () => {
     
     setIsUpdating(true);
     try {
-      // Upload avatar if changed
       let avatarUrl = user.avatar;
       
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         
-        // Check if storage bucket exists, create if not
         try {
           await supabase.storage.getBucket('avatars');
         } catch {
           await supabase.storage.createBucket('avatars', { public: true });
         }
         
-        // Upload file to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(fileName, avatarFile);
           
         if (uploadError) throw uploadError;
         
-        // Get public URL
         const { data: urlData } = await supabase.storage
           .from('avatars')
           .getPublicUrl(uploadData.path);
@@ -99,7 +106,6 @@ const UserProfile = () => {
         avatarUrl = urlData.publicUrl;
       }
       
-      // Update profile data
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
@@ -110,7 +116,6 @@ const UserProfile = () => {
         
       if (updateError) throw updateError;
       
-      // Update auth metadata
       const { error: authError } = await supabase.auth.updateUser({
         data: { 
           name,
@@ -135,7 +140,7 @@ const UserProfile = () => {
       setIsUpdating(false);
     }
   };
-  
+
   if (isLoading) {
     return (
       <Layout>

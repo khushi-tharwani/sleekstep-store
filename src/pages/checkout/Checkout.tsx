@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -12,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Lock, CreditCard } from "lucide-react";
 
 const CheckoutPage = () => {
-  const { cartItems, subTotal, clearCart } = useCart();
+  const { cart, cartTotal, clearCart } = useCart();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -33,9 +32,9 @@ const CheckoutPage = () => {
     cvv: ""
   });
   
-  const shippingCost = subTotal >= 75 ? 0 : 9.99;
-  const tax = subTotal * 0.08; // 8% tax rate
-  const total = subTotal + shippingCost + tax;
+  const shippingCost = cartTotal >= 75 ? 0 : 9.99;
+  const tax = cartTotal * 0.08;
+  const total = cartTotal + shippingCost + tax;
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,10 +45,8 @@ const CheckoutPage = () => {
     e.preventDefault();
     setIsProcessing(true);
     
-    // Simulate payment processing delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Always succeed for demo (80% success in real app)
     const isSuccessful = true;
     
     if (isSuccessful) {
@@ -69,7 +66,7 @@ const CheckoutPage = () => {
     }
   };
   
-  if (cartItems.length === 0) {
+  if (cart.length === 0) {
     navigate("/cart");
     return null;
   }
@@ -86,10 +83,8 @@ const CheckoutPage = () => {
         </div>
         
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Checkout form */}
           <div className="lg:w-2/3">
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Shipping Information */}
               <div className="bg-dark-100 rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Shipping Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,7 +176,6 @@ const CheckoutPage = () => {
                 </div>
               </div>
               
-              {/* Payment Information */}
               <div className="bg-dark-100 rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Payment Information</h2>
                 <div className="mb-4">
@@ -277,7 +271,6 @@ const CheckoutPage = () => {
                 </div>
               </div>
               
-              {/* Place Order Button (mobile) */}
               <div className="lg:hidden">
                 <Button
                   type="submit"
@@ -290,14 +283,12 @@ const CheckoutPage = () => {
             </form>
           </div>
           
-          {/* Order Summary */}
           <div className="lg:w-1/3">
             <div className="bg-dark-100 rounded-lg p-6 sticky top-24">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               
-              {/* Items in cart */}
               <div className="space-y-4 mb-4 max-h-64 overflow-y-auto pr-2">
-                {cartItems.map((item) => (
+                {cart.map((item) => (
                   <div key={item.id} className="flex justify-between">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-dark-200 rounded overflow-hidden mr-3 flex-shrink-0">
@@ -323,11 +314,10 @@ const CheckoutPage = () => {
               
               <Separator className="my-4 bg-white/10" />
               
-              {/* Price breakdown */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Subtotal</span>
-                  <span>${subTotal.toFixed(2)}</span>
+                  <span>${cartTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Shipping</span>
@@ -347,7 +337,6 @@ const CheckoutPage = () => {
                 </div>
               </div>
               
-              {/* Place Order Button (desktop) */}
               <div className="hidden lg:block">
                 <Button
                   type="submit"

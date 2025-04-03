@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
 const Navbar = () => {
-  const { totalItems } = useCart();
+  const { cartCount } = useCart();
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -66,9 +66,9 @@ const Navbar = () => {
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingBag className="h-5 w-5" />
-                {totalItems > 0 && (
+                {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                    {totalItems}
+                    {cartCount}
                   </span>
                 )}
               </Button>
@@ -131,9 +131,9 @@ const Navbar = () => {
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingBag className="h-5 w-5" />
-                {totalItems > 0 && (
+                {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                    {totalItems}
+                    {cartCount}
                   </span>
                 )}
               </Button>

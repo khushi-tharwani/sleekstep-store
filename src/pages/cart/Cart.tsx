@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useToast } from "@/components/ui/use-toast";
 
 const CartPage = () => {
-  const { cartItems, removeFromCart, updateQuantity, subTotal, totalItems } = useCart();
+  const { cart, updateCartItem, cartTotal, cartCount } = useCart();
   const { toast } = useToast();
   
   const handleRemoveItem = (itemId: string) => {
@@ -15,19 +14,19 @@ const CartPage = () => {
   };
   
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
-    updateQuantity(itemId, newQuantity);
+    updateCartItem(itemId, newQuantity);
   };
   
-  const shippingCost = subTotal >= 75 ? 0 : 9.99;
-  const tax = subTotal * 0.08; // 8% tax rate
-  const total = subTotal + shippingCost + tax;
+  const shippingCost = cartTotal >= 75 ? 0 : 9.99;
+  const tax = cartTotal * 0.08;
+  const total = cartTotal + shippingCost + tax;
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-16">
         <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
         
-        {cartItems.length === 0 ? (
+        {cart.length === 0 ? (
           <div className="bg-dark-100 rounded-lg p-8 text-center">
             <div className="flex justify-center mb-4">
               <ShoppingBag className="h-16 w-16 text-gray-400" />
@@ -44,7 +43,6 @@ const CartPage = () => {
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Cart items */}
             <div className="lg:w-2/3">
               <div className="bg-dark-100 rounded-lg overflow-hidden">
                 <table className="w-full">
@@ -58,7 +56,7 @@ const CartPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10">
-                    {cartItems.map((item) => (
+                    {cart.map((item) => (
                       <tr key={item.id} className="hover:bg-dark-200/50">
                         <td className="py-4 px-6">
                           <div className="flex items-center">
@@ -144,14 +142,13 @@ const CartPage = () => {
               </div>
             </div>
             
-            {/* Order summary */}
             <div className="lg:w-1/3">
               <div className="bg-dark-100 rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Order Summary</h2>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Items ({totalItems})</span>
-                    <span>${subTotal.toFixed(2)}</span>
+                    <span className="text-gray-400">Items ({cartCount})</span>
+                    <span>${cartTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Shipping</span>
@@ -168,7 +165,7 @@ const CartPage = () => {
                   {shippingCost > 0 && (
                     <div className="pt-2 text-xs text-gray-400">
                       <p>Free shipping on orders over $75</p>
-                      <p>You're ${(75 - subTotal).toFixed(2)} away from free shipping</p>
+                      <p>You're ${(75 - cartTotal).toFixed(2)} away from free shipping</p>
                     </div>
                   )}
                   <div className="border-t border-white/10 pt-3 flex justify-between">

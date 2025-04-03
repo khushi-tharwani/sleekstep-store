@@ -19,6 +19,13 @@ interface CartContextType {
   loading: boolean;
   checkoutCart: (paymentMethod: string, addressId: string) => Promise<boolean>;
   fetchOrders: () => Promise<void>;
+  
+  // Add missing properties needed by components
+  cartItems: CartItem[];
+  updateQuantity: (id: string, quantity: number) => void;
+  subTotal: number;
+  totalItems: number;
+  fetchOrderHistory: () => Promise<Order[]>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -36,46 +43,69 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
+  // Load cart items from database
   const loadCart = async () => {
     try {
       if (!user) return;
 
-      const { data: cartItems, error } = await supabase
+      // Direct query to products without using cart_items relation
+      const { data: cartData, error: cartError } = await supabase
         .from('cart_items')
-        .select('*, product:product_id(*)')
+        .select('id, product_id, quantity, size, color, user_id')
         .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Error loading cart:', error);
+      if (cartError) {
+        console.error('Error loading cart:', cartError);
         return;
       }
 
-      if (cartItems) {
-        const transformedItems: CartItem[] = cartItems.map(item => ({
-          id: item.id,
-          productId: item.product_id,
-          product: {
-            id: item.product.id,
-            name: item.product.name,
-            brand: item.product.brand,
-            category: item.product.category,
-            price: item.product.price,
-            salePrice: item.product.sale_price,
-            description: item.product.description,
-            images: item.product.images || [],
-            sizes: [],
-            colors: [],
-            stock: item.product.stock || 0,
-            rating: item.product.rating || 0,
-            reviews: [],
-            isFeatured: item.product.is_featured || false,
-            isTrending: item.product.is_trending || false,
-            createdAt: item.product.created_at || '',
-          },
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color,
-        }));
+      if (cartData && cartData.length > 0) {
+        // Get all product IDs from cart items
+        const productIds = cartData.map(item => item.product_id);
+        
+        // Fetch products separately
+        const { data: products, error: productsError } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', productIds);
+
+        if (productsError) {
+          console.error('Error loading products:', productsError);
+          return;
+        }
+
+        // Map products to cart items
+        const transformedItems: CartItem[] = cartData.map(item => {
+          const product = products?.find(p => p.id === item.product_id);
+          
+          if (!product) return null;
+          
+          return {
+            id: item.id,
+            productId: item.product_id,
+            product: {
+              id: product.id,
+              name: product.name,
+              brand: product.brand,
+              category: product.category,
+              price: product.price,
+              salePrice: product.sale_price,
+              description: product.description,
+              images: product.images || [],
+              sizes: [],
+              colors: [],
+              stock: product.stock || 0,
+              rating: product.rating || 0,
+              reviews: [],
+              isFeatured: product.is_featured || false,
+              isTrending: product.is_trending || false,
+              createdAt: product.created_at || '',
+            },
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color,
+          };
+        }).filter(Boolean) as CartItem[];
         
         setCart(transformedItems);
       }
@@ -84,6 +114,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Sync cart with database
   const syncCart = async () => {
     if (!user) return;
 
@@ -96,28 +127,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (deleteError) throw deleteError;
 
-      // Then insert the new cart items
+      // Then insert the new cart items one by one to avoid type issues
       if (cart.length > 0) {
-        const cartToInsert = cart.map(item => ({
-          id: item.id,
-          user_id: user.id,
-          product_id: item.productId,
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color,
-        }));
+        for (const item of cart) {
+          const { error: insertError } = await supabase
+            .from('cart_items')
+            .insert({
+              id: item.id,
+              user_id: user.id,
+              product_id: item.productId,
+              quantity: item.quantity,
+              size: item.size,
+              color: item.color
+            });
 
-        const { error: insertError } = await supabase
-          .from('cart_items')
-          .insert(cartToInsert);
-
-        if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Error inserting cart item:', insertError);
+          }
+        }
       }
     } catch (error) {
       console.error('Error syncing cart with database:', error);
     }
   };
 
+  // Add to cart
   const addToCart = (product: Product, quantity: number, size: string, color: string) => {
     setCart(prevCart => {
       // Check if the product with same size and color already exists in cart
@@ -154,6 +188,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Update cart item
   const updateCartItem = (id: string, quantity: number) => {
     setCart(prevCart => {
       const updatedCart = prevCart.map(item => 
@@ -168,6 +203,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Remove from cart
   const removeFromCart = (id: string) => {
     setCart(prevCart => {
       const itemToRemove = prevCart.find(item => item.id === id);
@@ -185,6 +221,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Clear cart
   const clearCart = () => {
     setCart([]);
     if (user) {
@@ -192,13 +229,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Calculate cart total
   const cartTotal = cart.reduce(
     (total, item) => total + (item.product.salePrice || item.product.price) * item.quantity,
     0
   );
 
+  // Calculate cart count
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
 
+  // Checkout cart
   const checkoutCart = async (paymentMethod: string, addressId: string): Promise<boolean> => {
     if (!user || cart.length === 0) {
       toast.error("Cart is empty or you're not logged in");
@@ -214,7 +254,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .insert({
           user_id: user.id,
           total: cartTotal,
-          status: 'processing' as const,  // Using as const to ensure it matches the type
+          status: 'processing',
           payment_method: paymentMethod,
           address_id: addressId
         })
@@ -235,12 +275,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         color: item.color
       }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+      // Insert order items one by one to avoid type issues
+      for (const item of orderItems) {
+        const { error: itemError } = await supabase
+          .from('order_items')
+          .insert(item);
 
-      if (itemsError) {
-        throw itemsError;
+        if (itemError) {
+          throw itemError;
+        }
       }
 
       // Clear the cart after successful order
@@ -258,6 +301,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Fetch orders
   const fetchOrders = async () => {
     if (!user) return;
     
@@ -293,6 +337,46 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Fetch order history - implementation for Profile page
+  const fetchOrderHistory = async (): Promise<Order[]> => {
+    if (!user) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        // Ensure all orders have the correct status type
+        return data.map(order => ({
+          ...order,
+          status: order.status as 'processing' | 'shipped' | 'delivered' | 'cancelled'
+        }));
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error fetching order history:', error);
+      toast.error('Failed to load your order history');
+      return [];
+    }
+  };
+
+  // Create aliases for properties needed by components
+  const cartItems = cart;
+  const updateQuantity = updateCartItem;
+  const subTotal = cartTotal;
+  const totalItems = cartCount;
+
   return (
     <CartContext.Provider value={{
       cart,
@@ -305,7 +389,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cartCount,
       loading,
       checkoutCart,
-      fetchOrders
+      fetchOrders,
+      
+      // Add aliases for backward compatibility
+      cartItems,
+      updateQuantity,
+      subTotal,
+      totalItems,
+      fetchOrderHistory
     }}>
       {children}
     </CartContext.Provider>
