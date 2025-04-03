@@ -1,3 +1,4 @@
+
 export interface Order {
   id: string;
   user_id: string;
@@ -47,8 +48,8 @@ export interface Product {
   salePrice?: number;
   description: string;
   images: string[];
-  sizes: string[];
-  colors: string[];
+  sizes: ProductSize[];
+  colors: ProductColor[];
   stock: number;
   rating: number;
   reviews: Review[];
@@ -56,6 +57,19 @@ export interface Product {
   isTrending: boolean;
   createdAt: string;
   qrCode?: string;
+}
+
+export interface ProductSize {
+  id: string;
+  value: string;
+  available: boolean;
+}
+
+export interface ProductColor {
+  id: string;
+  name: string;
+  value: string;
+  available: boolean;
 }
 
 export interface Review {

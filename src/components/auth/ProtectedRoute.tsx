@@ -7,13 +7,15 @@ import { useToast } from '@/hooks/use-toast';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredPermission?: string;
+  adminOnly?: boolean;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredPermission 
+  requiredPermission,
+  adminOnly = false
 }) => {
-  const { isAuthenticated, isLoading, hasPermission } = useAuth();
+  const { isAuthenticated, isLoading, hasPermission, isAdmin } = useAuth();
   const { toast } = useToast();
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
   const location = useLocation();
@@ -27,6 +29,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           variant: "destructive",
         });
         setShouldRedirect(true);
+      } else if (adminOnly && !isAdmin) {
+        toast({
+          title: "Admin Access Denied",
+          description: "You need admin privileges to access this page",
+          variant: "destructive",
+        });
+        setShouldRedirect(true);
       } else if (requiredPermission && !hasPermission(requiredPermission)) {
         toast({
           title: "Access Denied",
@@ -36,7 +45,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         setShouldRedirect(true);
       }
     }
-  }, [isAuthenticated, isLoading, requiredPermission, hasPermission, toast]);
+  }, [isAuthenticated, isLoading, requiredPermission, hasPermission, adminOnly, isAdmin, toast]);
 
   // Show loading state while auth is being checked
   if (isLoading) {
@@ -47,8 +56,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // If not authenticated, redirect to login with return URL
+  // If not authenticated or doesn't have permission, redirect to login with return URL
   if (shouldRedirect) {
+    // Redirect to admin login if trying to access admin page
+    if (adminOnly) {
+      return <Navigate to={`/admin-login?returnUrl=${encodeURIComponent(location.pathname)}`} />;
+    }
     return <Navigate to={`/login?returnUrl=${encodeURIComponent(location.pathname)}`} />;
   }
 

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
-import { LogIn } from "lucide-react";
+import { LogIn, Shield } from "lucide-react";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -37,7 +37,7 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      await login(email, password, true); // Added third parameter to check for admin
       // Navigate based on role after login
       if (isAdmin) {
         navigate("/admin/products");
@@ -62,7 +62,7 @@ const AdminLogin = () => {
         <div className="w-full max-w-md">
           <div className="bg-dark-100 p-8 rounded-lg border border-white/10 shadow-lg">
             <div className="flex items-center justify-center mb-6">
-              <LogIn className="h-8 w-8 text-primary" />
+              <Shield className="h-8 w-8 text-primary" />
             </div>
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold">Admin Login</h1>

@@ -18,7 +18,6 @@ import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import OrdersPage from "./pages/orders/Orders";
 import AdminProducts from "./pages/admin/Products";
 import NotFound from "./pages/NotFound";
-import AdminRoute from "./components/auth/AdminRoute";
 import AdminLogin from "./pages/auth/AdminLogin";
 import UserProfile from "./pages/user/Profile";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -58,7 +57,7 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               
               {/* Admin routes */}
-              <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+              <Route path="/admin/products" element={<ProtectedRoute adminOnly={true}><AdminProducts /></ProtectedRoute>} />
               
               {/* Catch all */}
               <Route path="*" element={<NotFound />} />
