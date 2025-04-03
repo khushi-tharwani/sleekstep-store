@@ -1,223 +1,269 @@
 
-import React, { createContext, useState, useContext, useEffect } from "react";
-import { CartItem, Product, Order } from "../types";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./AuthContext";
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { CartItem, Product, Order } from '@/types';
+import { useAuth } from './AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { nanoid } from 'nanoid';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface CartContextType {
-  cartItems: CartItem[];
+  cart: CartItem[];
+  orders: Order[];
   addToCart: (product: Product, quantity: number, size: string, color: string) => void;
-  removeFromCart: (itemId: string) => void;
-  updateQuantity: (itemId: string, quantity: number) => void;
+  updateCartItem: (id: string, quantity: number) => void;
+  removeFromCart: (id: string) => void;
   clearCart: () => void;
-  totalItems: number;
-  subTotal: number;
-  saveOrderToDatabase: (addressId: string, paymentMethod: string) => Promise<string | null>;
-  fetchOrderHistory: () => Promise<Order[]>;
+  cartTotal: number;
+  cartCount: number;
+  loading: boolean;
+  checkoutCart: (paymentMethod: string, addressId: string) => Promise<boolean>;
+  fetchOrders: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
-  
-  // Load cart from localStorage on component mount
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error("Error parsing saved cart:", error);
-        localStorage.removeItem("cart");
-      }
+    if (user) {
+      loadCart();
     }
-  }, []);
-  
-  // Save to localStorage whenever cart changes
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
-  
-  const addToCart = (product: Product, quantity: number, size: string, color: string) => {
-    // Check if product with same size and color already exists in cart
-    const existingItemIndex = cartItems.findIndex(
-      item => item.productId === product.id && item.size === size && item.color === color
-    );
-    
-    if (existingItemIndex !== -1) {
-      // Update quantity if product already exists
-      const updatedCart = cartItems.map((item, index) => 
-        index === existingItemIndex 
-          ? { ...item, quantity: item.quantity + quantity } 
-          : item
-      );
-      setCartItems(updatedCart);
-      toast({
-        title: "Cart updated",
-        description: `${product.name} quantity updated in your cart.`,
-      });
-    } else {
-      // Add new item if it doesn't exist
-      const newItem: CartItem = {
-        id: `${product.id}-${size}-${color}-${Date.now()}`,
-        productId: product.id,
-        product,
-        quantity,
-        size,
-        color
-      };
-      setCartItems([...cartItems, newItem]);
-      toast({
-        title: "Item added",
-        description: `${product.name} added to your cart.`,
-      });
+  }, [user]);
+
+  const loadCart = async () => {
+    try {
+      if (!user) return;
+
+      const { data: cartItems, error } = await supabase
+        .from('cart_items')
+        .select('*, product:product_id(*)')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error loading cart:', error);
+        return;
+      }
+
+      if (cartItems) {
+        const transformedItems: CartItem[] = cartItems.map(item => ({
+          id: item.id,
+          productId: item.product_id,
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            brand: item.product.brand,
+            category: item.product.category,
+            price: item.product.price,
+            salePrice: item.product.sale_price,
+            description: item.product.description,
+            images: item.product.images || [],
+            sizes: [],
+            colors: [],
+            stock: item.product.stock || 0,
+            rating: item.product.rating || 0,
+            reviews: [],
+            isFeatured: item.product.is_featured || false,
+            isTrending: item.product.is_trending || false,
+            createdAt: item.product.created_at || '',
+          },
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+        }));
+        
+        setCart(transformedItems);
+      }
+    } catch (error) {
+      console.error('Error in loadCart:', error);
     }
   };
-  
-  const removeFromCart = (itemId: string) => {
-    const updatedCart = cartItems.filter(item => item.id !== itemId);
-    setCartItems(updatedCart);
-    toast({
-      title: "Item removed",
-      description: "Product removed from your cart.",
+
+  const syncCart = async () => {
+    if (!user) return;
+
+    try {
+      // First, remove existing cart items
+      const { error: deleteError } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteError) throw deleteError;
+
+      // Then insert the new cart items
+      if (cart.length > 0) {
+        const cartToInsert = cart.map(item => ({
+          id: item.id,
+          user_id: user.id,
+          product_id: item.productId,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+        }));
+
+        const { error: insertError } = await supabase
+          .from('cart_items')
+          .insert(cartToInsert);
+
+        if (insertError) throw insertError;
+      }
+    } catch (error) {
+      console.error('Error syncing cart with database:', error);
+    }
+  };
+
+  const addToCart = (product: Product, quantity: number, size: string, color: string) => {
+    setCart(prevCart => {
+      // Check if the product with same size and color already exists in cart
+      const existingItemIndex = prevCart.findIndex(
+        item => item.productId === product.id && item.size === size && item.color === color
+      );
+
+      const updatedCart = [...prevCart];
+      
+      if (existingItemIndex >= 0) {
+        // Update quantity of the existing item
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + quantity
+        };
+      } else {
+        // Add new item to cart
+        updatedCart.push({
+          id: nanoid(),
+          productId: product.id,
+          product,
+          quantity,
+          size,
+          color,
+        });
+      }
+      
+      if (user) {
+        setTimeout(() => syncCart(), 0); // Sync cart with database if user is logged in
+      }
+      
+      toast.success(`${product.name} added to cart`);
+      return updatedCart;
     });
   };
-  
-  const updateQuantity = (itemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(itemId);
-      return;
-    }
-    
-    const updatedCart = cartItems.map(item => 
-      item.id === itemId ? { ...item, quantity } : item
-    );
-    setCartItems(updatedCart);
-  };
-  
-  const clearCart = () => {
-    setCartItems([]);
-    localStorage.removeItem("cart");
-  };
-  
-  // Save order to database with better error handling and transaction support
-  const saveOrderToDatabase = async (addressId: string, paymentMethod: string): Promise<string | null> => {
-    if (!isAuthenticated || !user) {
-      toast({
-        title: "Authentication required",
-        description: "Please login to complete your order.",
-        variant: "destructive",
-      });
-      return null;
-    }
-    
-    try {
-      const subTotal = cartItems.reduce(
-        (total, item) => total + (item.product.salePrice || item.product.price) * item.quantity, 
-        0
+
+  const updateCartItem = (id: string, quantity: number) => {
+    setCart(prevCart => {
+      const updatedCart = prevCart.map(item => 
+        item.id === id ? { ...item, quantity } : item
       );
       
-      // Use Supabase's RPC to execute a stored procedure in a single transaction
+      if (user) {
+        setTimeout(() => syncCart(), 0);
+      }
+      
+      return updatedCart;
+    });
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(prevCart => {
+      const itemToRemove = prevCart.find(item => item.id === id);
+      const updatedCart = prevCart.filter(item => item.id !== id);
+      
+      if (user) {
+        setTimeout(() => syncCart(), 0);
+      }
+      
+      if (itemToRemove) {
+        toast.info(`${itemToRemove.product.name} removed from cart`);
+      }
+      
+      return updatedCart;
+    });
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    if (user) {
+      setTimeout(() => syncCart(), 0);
+    }
+  };
+
+  const cartTotal = cart.reduce(
+    (total, item) => total + (item.product.salePrice || item.product.price) * item.quantity,
+    0
+  );
+
+  const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
+
+  const checkoutCart = async (paymentMethod: string, addressId: string): Promise<boolean> => {
+    if (!user || cart.length === 0) {
+      toast.error("Cart is empty or you're not logged in");
+      return false;
+    }
+
+    setLoading(true);
+
+    try {
+      // Create the order
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          total: subTotal,
-          address_id: addressId,
+          total: cartTotal,
+          status: 'processing' as const,  // Using as const to ensure it matches the type
           payment_method: paymentMethod,
-          status: 'processing'
+          address_id: addressId
         })
         .select('id')
         .single();
-      
-      if (orderError) {
-        throw new Error(`Order creation failed: ${orderError.message}`);
+
+      if (orderError || !orderData) {
+        throw orderError || new Error('Failed to create order');
       }
-      
-      if (!orderData?.id) {
-        throw new Error('Order was created but no ID was returned');
-      }
-      
-      const orderId = orderData.id;
-      
-      // Then add order items
-      const orderItems = cartItems.map(item => ({
-        order_id: orderId,
+
+      // Create order items
+      const orderItems = cart.map(item => ({
+        order_id: orderData.id,
         product_id: item.productId,
         quantity: item.quantity,
         price: item.product.salePrice || item.product.price,
         size: item.size,
         color: item.color
       }));
-      
+
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
-      
+
       if (itemsError) {
-        console.error('Failed to add order items:', itemsError);
-        toast({
-          title: 'Warning',
-          description: 'Order created but some items may not have been added correctly.',
-          variant: 'destructive'
-        });
+        throw itemsError;
       }
-      
-      // Add a webhook call to an external API to track order analytics
-      try {
-        await fetch('https://api.example.com/order/analytics', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            orderId,
-            userId: user.id,
-            totalAmount: subTotal,
-            itemCount: cartItems.length,
-            timestamp: new Date().toISOString()
-          })
-        });
-      } catch (webhookError) {
-        // Non-critical error, just log it
-        console.warn("Analytics webhook failed:", webhookError);
-      }
-      
-      toast({
-        title: "Order placed successfully!",
-        description: "Thank you for your purchase.",
-      });
-      
+
+      // Clear the cart after successful order
       clearCart();
-      return orderId;
-    } catch (error: any) {
-      console.error("Error saving order:", error);
-      toast({
-        title: "Order failed",
-        description: error.message || "Failed to place your order. Please try again.",
-        variant: "destructive",
-      });
-      return null;
+      
+      // Navigate to success page
+      navigate('/payment-success', { state: { orderId: orderData.id } });
+      return true;
+    } catch (error) {
+      console.error('Error processing checkout:', error);
+      toast.error("Failed to complete your order");
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
-  
-  // Fetch order history for the current user
-  const fetchOrderHistory = async (): Promise<Order[]> => {
-    if (!isAuthenticated || !user) {
-      toast({
-        title: "Authentication required",
-        description: "Please login to view your order history.",
-        variant: "destructive",
-      });
-      return [];
-    }
+
+  const fetchOrders = async () => {
+    if (!user) return;
     
+    setLoading(true);
     try {
-      const { data: orders, error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
@@ -225,42 +271,42 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        // Ensure all orders have the correct status type
+        const typedOrders = data.map(order => ({
+          ...order,
+          status: order.status as 'processing' | 'shipped' | 'delivered' | 'cancelled'
+        }));
         
-      if (error) throw error;
-      
-      return orders || [];
-    } catch (error: any) {
-      console.error("Error fetching order history:", error);
-      toast({
-        title: "Failed to load orders",
-        description: error.message || "Unable to retrieve your order history.",
-        variant: "destructive",
-      });
-      return [];
+        setOrders(typedOrders);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to load your orders');
+    } finally {
+      setLoading(false);
     }
   };
-  
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-  
-  const subTotal = cartItems.reduce(
-    (total, item) => total + (item.product.salePrice || item.product.price) * item.quantity, 
-    0
-  );
-  
+
   return (
-    <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        subTotal,
-        saveOrderToDatabase,
-        fetchOrderHistory
-      }}
-    >
+    <CartContext.Provider value={{
+      cart,
+      orders,
+      addToCart,
+      updateCartItem,
+      removeFromCart,
+      clearCart,
+      cartTotal,
+      cartCount,
+      loading,
+      checkoutCart,
+      fetchOrders
+    }}>
       {children}
     </CartContext.Provider>
   );
@@ -269,7 +315,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
-    throw new Error("useCart must be used within a CartProvider");
+    throw new Error('useCart must be used within a CartProvider');
   }
   return context;
 };

@@ -1,171 +1,68 @@
 
-import { useState, useEffect } from "react";
-import Layout from "@/components/layout/Layout";
-import { useAuth } from "@/context/AuthContext";
-import { Order } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from "date-fns";
-import { Package, ChevronDown, ChevronUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import Layout from '@/components/layout/Layout';
+import { supabase } from '@/integrations/supabase/client';
+import { Order } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
+import { Package, ShoppingBag, Truck, CheckCircle, XCircle } from 'lucide-react';
 
-const Orders = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+const Orders: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-
-  // Mock data for demonstration if needed
-  const mockOrders: Order[] = [
-    {
-      id: "1",
-      user_id: user?.id || '',
-      total: 299.97,
-      status: "delivered",
-      created_at: "2025-03-15T10:30:00Z",
-      updated_at: "2025-03-16T14:20:00Z",
-      payment_method: "Credit Card",
-      address_id: "addr1",
-      order_items: [
-        {
-          id: "item1",
-          order_id: "1",
-          product_id: "prod1",
-          quantity: 2,
-          price: 99.99,
-          size: "US 10",
-          color: "Black"
-        },
-        {
-          id: "item2",
-          order_id: "1",
-          product_id: "prod2",
-          quantity: 1,
-          price: 99.99,
-          size: "US 9",
-          color: "White"
-        }
-      ]
-    },
-    {
-      id: "2",
-      user_id: user?.id || '',
-      total: 159.98,
-      status: "shipped",
-      created_at: "2025-03-10T09:15:00Z",
-      updated_at: "2025-03-11T11:45:00Z",
-      payment_method: "PayPal",
-      address_id: "addr2",
-      order_items: [
-        {
-          id: "item3",
-          order_id: "2",
-          product_id: "prod3",
-          quantity: 1,
-          price: 159.98,
-          size: "US 8",
-          color: "Red"
-        }
-      ]
-    },
-    {
-      id: "3", 
-      user_id: user?.id || '',
-      total: 249.95,
-      status: "processing",
-      created_at: "2025-03-20T15:45:00Z",
-      updated_at: "2025-03-20T15:45:00Z",
-      payment_method: "Apple Pay",
-      address_id: "addr1",
-      order_items: [
-        {
-          id: "item4",
-          order_id: "3",
-          product_id: "prod4",
-          quantity: 1,
-          price: 249.95,
-          size: "US 11",
-          color: "Blue"
-        }
-      ]
-    }
-  ];
+  const { fetchOrders, orders } = useCart();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return;
-      
+    const loadOrders = async () => {
       try {
-        setIsLoading(true);
-        
-        // Fetch orders from Supabase
-        const { data, error } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items(*)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        // If no orders found in Supabase, use mock data for demo
-        if (data && data.length > 0) {
-          setOrders(data);
-        } else {
-          console.log("No orders found in Supabase, using mock data");
-          setOrders(mockOrders);
-        }
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        toast({
-          title: "Failed to fetch orders",
-          description: "Something went wrong. Using sample data instead.",
-          variant: "destructive",
-        });
-        setOrders(mockOrders);
+        await fetchOrders();
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchOrders();
-  }, [user]);
-
-  const toggleOrderExpansion = (orderId: string) => {
-    if (expandedOrder === orderId) {
-      setExpandedOrder(null);
-    } else {
-      setExpandedOrder(orderId);
+    if (user) {
+      loadOrders();
     }
-  };
+  }, [user, fetchOrders]);
 
-  const getStatusColor = (status: string) => {
+  // Function to determine the badge color based on order status
+  const getStatusBadge = (status: 'processing' | 'shipped' | 'delivered' | 'cancelled') => {
     switch (status) {
-      case "processing":
-        return "bg-yellow-500/20 text-yellow-500";
-      case "shipped":
-        return "bg-blue-500/20 text-blue-500";
-      case "delivered":
-        return "bg-green-500/20 text-green-500";
-      case "cancelled":
-        return "bg-red-500/20 text-red-500";
+      case 'processing':
+        return { color: 'bg-yellow-100 text-yellow-800', icon: <Package className="h-4 w-4 mr-1" /> };
+      case 'shipped':
+        return { color: 'bg-blue-100 text-blue-800', icon: <Truck className="h-4 w-4 mr-1" /> };
+      case 'delivered':
+        return { color: 'bg-green-100 text-green-800', icon: <CheckCircle className="h-4 w-4 mr-1" /> };
+      case 'cancelled':
+        return { color: 'bg-red-100 text-red-800', icon: <XCircle className="h-4 w-4 mr-1" /> };
       default:
-        return "bg-gray-500/20 text-gray-500";
+        return { color: 'bg-gray-100 text-gray-800', icon: <ShoppingBag className="h-4 w-4 mr-1" /> };
     }
   };
 
-  if (isLoading) {
+  // Function to format the date in a readable format
+  const formatDate = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  if (!user) {
     return (
       <Layout>
-        <div className="container max-w-4xl mx-auto px-4 py-16">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
+        <div className="container py-12">
+          <h1 className="text-2xl font-bold mb-6">Orders</h1>
+          <p>Please log in to view your orders.</p>
         </div>
       </Layout>
     );
@@ -173,99 +70,96 @@ const Orders = () => {
 
   return (
     <Layout>
-      <div className="container max-w-4xl mx-auto px-4 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Your Orders</h1>
-          <Badge className="px-3 py-1">
-            {orders.length} {orders.length === 1 ? "Order" : "Orders"}
-          </Badge>
-        </div>
+      <div className="container py-12">
+        <h1 className="text-2xl font-bold mb-6">Your Orders</h1>
 
-        {orders.length === 0 ? (
-          <div className="text-center bg-gray-800/50 rounded-lg p-12">
-            <Package className="mx-auto h-12 w-12 text-gray-400" />
-            <h2 className="mt-4 text-xl font-medium">No orders yet</h2>
-            <p className="mt-2 text-gray-400">
-              When you place an order, it will appear here.
-            </p>
+        {loading ? (
+          <div className="grid gap-6">
+            {[1, 2].map((_, index) => (
+              <Card key={index} className="animate-pulse">
+                <CardHeader>
+                  <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[1, 2].map((_, itemIndex) => (
+                    <div key={itemIndex} className="flex gap-4">
+                      <div className="h-16 w-16 bg-gray-200 rounded"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="bg-gray-800/50 rounded-lg overflow-hidden"
-              >
-                <button
-                  className="w-full p-4 flex items-center justify-between text-left"
-                  onClick={() => toggleOrderExpansion(order.id)}
-                >
-                  <div>
-                    <div className="flex items-center">
-                      <span className="font-medium">Order #{order.id.slice(0, 8)}</span>
-                      <span className="mx-2">•</span>
-                      <Badge
-                        className={`${getStatusColor(order.status)} border-none`}
+        ) : orders.length > 0 ? (
+          <div className="grid gap-6">
+            {orders.map((order) => {
+              const statusBadge = getStatusBadge(order.status);
+              
+              return (
+                <Card key={order.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Placed {formatDate(order.created_at)}
+                        </p>
+                      </div>
+                      <Badge 
+                        className={`flex items-center ${statusBadge.color} px-2 py-1`}
+                        variant="outline"
                       >
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {statusBadge.icon} {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Placed {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
+                  </CardHeader>
+                  <CardContent>
+                    <p className="mb-2">
+                      <span className="font-semibold">Total:</span> ${order.total.toFixed(2)}
                     </p>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium mr-3">${order.total.toFixed(2)}</span>
-                    {expandedOrder === order.id ? (
-                      <ChevronUp className="h-5 w-5" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5" />
-                    )}
-                  </div>
-                </button>
-
-                {expandedOrder === order.id && (
-                  <div className="p-4 pt-0 border-t border-white/10">
-                    <div className="text-sm text-gray-400 mb-4 grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="block text-white">Payment Method</span>
-                        {order.payment_method}
-                      </div>
-                      <div>
-                        <span className="block text-white">Items</span>
-                        {order.order_items?.length || 0} items
-                      </div>
-                    </div>
-
+                    <p className="mb-2">
+                      <span className="font-semibold">Payment Method:</span> {order.payment_method}
+                    </p>
+                    
+                    <Separator className="my-4" />
+                    
+                    <h3 className="font-semibold mb-2">Items:</h3>
                     <div className="space-y-3">
-                      {order.order_items?.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center p-3 bg-gray-700/30 rounded-md"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              Product #{item.product_id.slice(0, 8)}
-                            </div>
-                            <div className="text-sm text-gray-400">
-                              {item.size} • {item.color} • Qty: {item.quantity}
-                            </div>
+                      {order.order_items && order.order_items.map((item) => (
+                        <div key={item.id} className="flex gap-3">
+                          <div className="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center text-sm text-gray-500">
+                            Item
                           </div>
-                          <div className="font-medium">
-                            ${item.price.toFixed(2)}
+                          <div>
+                            <p className="font-medium">Product #{item.product_id.slice(0, 8)}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {item.quantity} × ${item.price.toFixed(2)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Size: {item.size}, Color: {item.color}
+                            </p>
                           </div>
                         </div>
                       ))}
                     </div>
-
-                    <div className="mt-4 pt-4 border-t border-white/10 flex justify-between">
-                      <span>Total</span>
-                      <span className="font-bold">${order.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <ShoppingBag className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h2 className="text-xl font-medium mb-2">No orders yet</h2>
+            <p className="text-gray-500 mb-6">You haven't placed any orders yet.</p>
+            <Button onClick={() => window.location.href = '/products'}>
+              Start Shopping
+            </Button>
           </div>
         )}
       </div>
