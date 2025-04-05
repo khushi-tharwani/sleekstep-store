@@ -16,8 +16,8 @@ import Register from '@/pages/auth/Register';
 import AdminLogin from '@/pages/auth/AdminLogin';
 import Profile from '@/pages/user/Profile';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { CartProvider } from '@/context/CartContext';
 
 // Create lazy-loaded component for Categories
 const Categories = React.lazy(() => import('@/pages/Categories'));
@@ -27,9 +27,9 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CartProvider>
-          <Router>
+      <Router>
+        <AuthProvider>
+          <CartProvider>
             <Toaster />
             <Routes>
               {/* Public Routes */}
@@ -64,9 +64,9 @@ function App() {
               {/* Catch-all Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Router>
-        </CartProvider>
-      </AuthProvider>
+          </CartProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }

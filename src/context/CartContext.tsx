@@ -5,7 +5,6 @@ import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface CartContextType {
   cart: CartItem[];
@@ -35,7 +34,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -211,8 +209,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear the cart after successful order
       clearCart();
       
-      // Navigate to success page
-      navigate('/payment-success', { state: { orderId: orderData.id } });
+      // Success - we'll handle navigation in the component that calls this function
       return true;
     } catch (error) {
       console.error('Error processing checkout:', error);
