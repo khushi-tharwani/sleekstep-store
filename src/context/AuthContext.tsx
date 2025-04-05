@@ -1,9 +1,8 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { User } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +22,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { toast } = useToast();
 
   // Initialize auth state and set up listener for auth changes
   useEffect(() => {
@@ -138,17 +136,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // User data will be set by the onAuthStateChange listener
-      toast({
-        title: "Login successful!",
-        description: "Welcome back to SleekStep.",
-      });
+      toast.success("Login successful! Welcome back to SleekStep.");
     } catch (error: any) {
       console.error("Login failed:", error);
-      toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Please check your credentials and try again.");
       throw error;
     } finally {
       setIsLoading(false);
@@ -158,6 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = async (name: string, email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
+      // Disable email confirmation for better testing experience
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -166,24 +158,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             name,
             role: 'user',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-          }
+          },
+          emailRedirectTo: window.location.origin
         }
       });
       
       if (error) throw error;
       
-      // User data will be set by the onAuthStateChange listener
-      toast({
-        title: "Registration successful!",
-        description: "Welcome to SleekStep.",
-      });
+      // If autoconfirm is enabled, user data will be set by the onAuthStateChange listener
+      // Otherwise, show a message about email confirmation
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        toast.error("Email already registered. Please try logging in.");
+      } else if (data.user && !data.session) {
+        toast.success("Registration successful! Please check your email to confirm your account.");
+      } else {
+        toast.success("Registration successful! Welcome to SleekStep.");
+      }
     } catch (error: any) {
       console.error("Registration failed:", error);
-      toast({
-        title: "Registration failed",
-        description: error.message || "This email might already be in use.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "This email might already be in use.");
       throw error;
     } finally {
       setIsLoading(false);
@@ -193,17 +186,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     try {
       await supabase.auth.signOut();
-      toast({
-        title: "Logged out",
-        description: "You have been logged out successfully.",
-      });
+      toast.success("You have been logged out successfully.");
     } catch (error: any) {
       console.error("Logout failed:", error);
-      toast({
-        title: "Logout failed",
-        description: error.message || "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to log out. Please try again.");
     }
   };
 

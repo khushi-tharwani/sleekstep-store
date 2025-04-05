@@ -4,7 +4,7 @@ import { QrReader } from 'react-qr-reader';
 import { fetchProductByQRCode } from '@/utils/qr-generator';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Camera, CameraOff, RefreshCw } from 'lucide-react';
 
 const QRScanner: React.FC = () => {
@@ -53,17 +53,10 @@ const QRScanner: React.FC = () => {
           const product = await fetchProductByQRCode(productId);
           
           if (product) {
-            toast({
-              title: 'Product Found!',
-              description: `Redirecting to ${product.name}`,
-            });
+            toast.success(`Product Found: Redirecting to ${product.name}`);
             navigate(`/product/${product.id}`);
           } else {
-            toast({
-              title: 'Product Not Found',
-              description: 'The scanned QR code does not match any product.',
-              variant: 'destructive'
-            });
+            toast.error('Product Not Found: The scanned QR code does not match any product.');
           }
         }
         
@@ -75,11 +68,7 @@ const QRScanner: React.FC = () => {
         setScanning(false);
       } catch (error) {
         console.error("QR Scanning error:", error);
-        toast({
-          title: 'Scanning Error',
-          description: 'Unable to process the QR code.',
-          variant: 'destructive'
-        });
+        toast.error('Scanning Error: Unable to process the QR code.');
         setScanning(false);
         setHasScanned(false);
       }
@@ -91,11 +80,7 @@ const QRScanner: React.FC = () => {
   const handleResult = async (result: any, error: any) => {
     if (error) {
       console.error("Camera error:", error);
-      toast({
-        title: 'Camera Error',
-        description: 'Unable to access camera. Please check permissions.',
-        variant: 'destructive'
-      });
+      toast.error('Camera Error: Unable to access camera. Please check permissions.');
       setScanning(false);
       return;
     }
@@ -113,11 +98,7 @@ const QRScanner: React.FC = () => {
     } catch (error) {
       console.error("Camera permission error:", error);
       setCameraPermission(false);
-      toast({
-        title: 'Camera Access Denied',
-        description: 'Please grant camera permission to use the QR scanner.',
-        variant: 'destructive'
-      });
+      toast.error('Camera Access Denied: Please grant camera permission to use the QR scanner.');
     }
   };
 

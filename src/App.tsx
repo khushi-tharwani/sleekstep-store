@@ -1,75 +1,106 @@
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from 'sonner';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
-import { CartProvider } from "@/context/CartContext";
-import { useState } from "react";
+// Import components and pages
+import Index from '@/pages/Index';
+import Products from '@/pages/Products';
+import ProductDetail from '@/pages/ProductDetail';
+import Cart from '@/pages/Cart';
+import Checkout from '@/pages/Checkout';
+import PaymentSuccess from '@/pages/PaymentSuccess';
+import Profile from '@/pages/user/Profile';
+import Orders from '@/pages/user/Orders';
+import OrderDetail from '@/pages/user/OrderDetail';
+import Login from '@/pages/auth/Login';
+import Register from '@/pages/auth/Register';
+import AdminLogin from '@/pages/auth/AdminLogin';
+import NotFound from '@/pages/NotFound';
+import AdminLayout from '@/components/layout/AdminLayout';
+import AdminProducts from '@/pages/admin/AdminProducts';
+import AdminOrders from '@/pages/admin/AdminOrders';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminRoute from '@/components/auth/AdminRoute';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import MediaGallery from '@/pages/MediaGallery';
 
-import Index from "./pages/Index";
-import Products from "./pages/Products";
-import ProductDetail from "./pages/product/ProductDetail";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import CartPage from "./pages/cart/Cart";
-import CheckoutPage from "./pages/checkout/Checkout";
-import PaymentSuccess from "./pages/checkout/PaymentSuccess";
-import OrdersPage from "./pages/orders/Orders";
-import AdminProducts from "./pages/admin/Products";
-import NotFound from "./pages/NotFound";
-import AdminLogin from "./pages/auth/AdminLogin";
-import UserProfile from "./pages/user/Profile";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+const Categories = React.lazy(() => import('@/pages/Categories'));
 
-const App = () => {
-  // Move the QueryClient initialization inside the component
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: 1,
-      },
-    },
-  }));
+const queryClient = new QueryClient();
 
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <AuthProvider>
-            <CartProvider>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/admin-login" element={<AdminLogin />} />
-                <Route path="/register" element={<Register />} />
-                
-                {/* Protected user routes */}
-                <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-                <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-                <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
-                <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-                
-                {/* Admin routes */}
-                <Route path="/admin/products" element={<ProtectedRoute adminOnly={true}><AdminProducts /></ProtectedRoute>} />
-                
-                {/* Catch all */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </CartProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </BrowserRouter>
+      <Router>
+        <Toaster />
+        {/* Admin Routes */}
+        <Routes>
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route
+            path="products"
+            element={
+              <AdminRoute>
+                <AdminProducts />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <AdminRoute>
+                <AdminOrders />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="users"
+            element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            }
+          />
+        </Route>
+
+        {/* Public Routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/categories" element={<Suspense fallback={<LoadingSpinner />}><Categories /></Suspense>} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/media-gallery" element={<MediaGallery />} />
+        
+        <Route path="/checkout" element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        } />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders/:id" element={
+          <ProtectedRoute>
+            <OrderDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

@@ -43,8 +43,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  // Load cart items using localStorage when not authenticated
-  // or fetch from database when authenticated
+  // Load cart items using localStorage
   const loadCart = async () => {
     try {
       if (!user) {
@@ -56,29 +55,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // For authenticated users, load from database
-      // Since we don't have a cart_items table in the schema, we'll query order_items
-      // and modify our approach
-      
-      // We'll use a temporary approach of storing cart items in localStorage even for logged-in users
-      // since we don't have a dedicated cart_items table in the Supabase schema
+      // For authenticated users, load from localStorage with user-specific key
       const savedCart = localStorage.getItem(`cart_${user.id}`);
       if (savedCart) {
         setCart(JSON.parse(savedCart));
       }
-      
-      // In a production app, you would create a cart_items table in Supabase
-      // and fetch cart items from there
     } catch (error) {
       console.error('Error in loadCart:', error);
     }
   };
 
-  // Save cart to localStorage and sync with database if authenticated
+  // Save cart to localStorage
   const saveCart = (updatedCart: CartItem[]) => {
     if (user) {
       localStorage.setItem(`cart_${user.id}`, JSON.stringify(updatedCart));
-      // In a production app, you would sync with a cart_items table in Supabase
     } else {
       localStorage.setItem('cart', JSON.stringify(updatedCart));
     }
@@ -165,7 +155,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Calculate cart count
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
 
-  // Checkout cart
+  // Checkout cart - ensures order data is stored in the database
   const checkoutCart = async (paymentMethod: string, addressId: string): Promise<boolean> => {
     if (!user || cart.length === 0) {
       toast.error("Cart is empty or you're not logged in");
@@ -175,7 +165,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
 
     try {
-      // Create the order
+      // Create the order in the database
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -192,7 +182,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw orderError || new Error('Failed to create order');
       }
 
-      // Create order items
+      console.log("Order created:", orderData);
+
+      // Create order items in the database
       const orderItems = cart.map(item => ({
         order_id: orderData.id,
         product_id: item.productId,
@@ -202,13 +194,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         color: item.color
       }));
 
-      // Insert order items one by one to avoid type issues
+      console.log("Creating order items:", orderItems);
+
+      // Insert order items
       for (const item of orderItems) {
         const { error: itemError } = await supabase
           .from('order_items')
           .insert(item);
 
         if (itemError) {
+          console.error("Error creating order item:", itemError);
           throw itemError;
         }
       }
@@ -228,7 +223,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch orders
+  // Fetch orders from the database
   const fetchOrders = async () => {
     if (!user) return;
     
