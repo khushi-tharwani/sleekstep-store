@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,29 +8,33 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
 import { LogIn, Shield } from "lucide-react";
+import { toast } from "sonner";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
-  // If already authenticated as admin, redirect to admin products
-  if (isAuthenticated && isAdmin && !authLoading) {
-    return <Navigate to="/admin/products" />;
-  }
-  
-  // If authenticated but not admin, show error toast
-  if (isAuthenticated && !isAdmin && !authLoading) {
-    toast({
-      title: "Access Denied",
-      description: "This login is only for administrators",
-      variant: "destructive",
-    });
-    return <Navigate to="/" />;
-  }
+  // Use useEffect to handle redirects based on authentication state
+  // This fixes the infinite render loop by moving redirects out of render phase
+  useEffect(() => {
+    if (!authLoading) {
+      // If already authenticated as admin, redirect to admin products
+      if (isAuthenticated && isAdmin) {
+        navigate("/admin/products");
+      }
+      // If authenticated but not admin, show error toast and redirect
+      else if (isAuthenticated && !isAdmin) {
+        toast("Access Denied", {
+          description: "This login is only for administrators",
+          position: "top-center"
+        });
+        navigate("/");
+      }
+    }
+  }, [isAuthenticated, isAdmin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,23 +42,23 @@ const AdminLogin = () => {
     
     try {
       await login(email, password, true); // Added third parameter to check for admin
-      // Navigate based on role after login
-      if (isAdmin) {
-        navigate("/admin/products");
-      } else {
-        toast({
-          title: "Access Denied",
-          description: "This login is only for administrators",
-          variant: "destructive",
-        });
-        navigate("/");
-      }
     } catch (error) {
       // Error is handled in the login function via toast
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Don't render the form if we're authenticated and/or redirecting
+  if (authLoading || (isAuthenticated && (isAdmin || !isAdmin))) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
