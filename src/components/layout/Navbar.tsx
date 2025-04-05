@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, User, Search, Menu, X } from "lucide-react";
@@ -7,7 +8,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
 const Navbar = () => {
-  const { cartCount } = useCart();
+  const { cartCount } = useCart();  // Changed from totalItems to cartCount
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);

@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useToast } from "@/components/ui/use-toast";
 
 const CartPage = () => {
-  const { cart, updateCartItem, cartTotal, cartCount } = useCart();
+  const { cart, updateCartItem, removeFromCart, cartTotal, cartCount } = useCart();
   const { toast } = useToast();
   
   const handleRemoveItem = (itemId: string) => {
