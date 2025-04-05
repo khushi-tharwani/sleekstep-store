@@ -4,6 +4,7 @@ import Layout from "@/components/layout/Layout";
 import { supabase } from '@/integrations/supabase/client';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { Link } from 'react-router-dom';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 type Category = {
   id: string;
@@ -13,6 +14,51 @@ type Category = {
   product_count: number;
 };
 
+const sampleCategories: Category[] = [
+  {
+    id: "running",
+    name: "Running",
+    description: "High-performance shoes designed for runners of all levels",
+    image_url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a",
+    product_count: 24
+  },
+  {
+    id: "casual",
+    name: "Casual",
+    description: "Everyday comfort for work and leisure",
+    image_url: "https://images.unsplash.com/photo-1560769629-975ec94e6a86",
+    product_count: 18
+  },
+  {
+    id: "basketball",
+    name: "Basketball",
+    description: "Engineered for court performance and ankle support",
+    image_url: "https://images.unsplash.com/photo-1579338559194-a162d19bf842",
+    product_count: 12
+  },
+  {
+    id: "training",
+    name: "Training",
+    description: "Versatile shoes for gym workouts and cross-training",
+    image_url: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa",
+    product_count: 15
+  },
+  {
+    id: "outdoor",
+    name: "Outdoor",
+    description: "Durable footwear for trails and outdoor activities",
+    image_url: "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2",
+    product_count: 20
+  },
+  {
+    id: "fashion",
+    name: "Fashion",
+    description: "Trendy styles to complement your wardrobe",
+    image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2",
+    product_count: 22
+  }
+];
+
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +67,16 @@ const Categories = () => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
+        
+        // In a real application, we would check for a 'categories' table
+        // Since we're getting errors that it doesn't exist, just use sample data
+        setCategories(sampleCategories);
+        
+        setTimeout(() => {
+          setLoading(false);
+        }, 500); // Simulate network delay
+        
+        /* Commented out because the categories table doesn't exist yet
         // Fetch categories from Supabase
         const { data, error } = await supabase
           .from('categories')
@@ -33,56 +89,15 @@ const Categories = () => {
         
         // If no categories in database, use sample data
         if (!data || data.length === 0) {
-          const sampleCategories: Category[] = [
-            {
-              id: "running",
-              name: "Running",
-              description: "High-performance shoes designed for runners of all levels",
-              image_url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a",
-              product_count: 24
-            },
-            {
-              id: "casual",
-              name: "Casual",
-              description: "Everyday comfort for work and leisure",
-              image_url: "https://images.unsplash.com/photo-1560769629-975ec94e6a86",
-              product_count: 18
-            },
-            {
-              id: "basketball",
-              name: "Basketball",
-              description: "Engineered for court performance and ankle support",
-              image_url: "https://images.unsplash.com/photo-1579338559194-a162d19bf842",
-              product_count: 12
-            },
-            {
-              id: "training",
-              name: "Training",
-              description: "Versatile shoes for gym workouts and cross-training",
-              image_url: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa",
-              product_count: 15
-            },
-            {
-              id: "outdoor",
-              name: "Outdoor",
-              description: "Durable footwear for trails and outdoor activities",
-              image_url: "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2",
-              product_count: 20
-            },
-            {
-              id: "fashion",
-              name: "Fashion",
-              description: "Trendy styles to complement your wardrobe",
-              image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2",
-              product_count: 22
-            }
-          ];
           setCategories(sampleCategories);
         } else {
           setCategories(data as Category[]);
         }
+        */
       } catch (error) {
         console.error('Error in fetchCategories:', error);
+        // Fallback to sample data on error
+        setCategories(sampleCategories);
       } finally {
         setLoading(false);
       }
@@ -97,10 +112,8 @@ const Categories = () => {
         <h1 className="text-3xl font-bold mb-8">Shop by Category</h1>
         
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div key={item} className="bg-gray-200 rounded-lg aspect-square"></div>
-            ))}
+          <div className="flex justify-center items-center h-64">
+            <LoadingSpinner />
           </div>
         ) : (
           <>
