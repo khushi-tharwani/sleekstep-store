@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, User, Search, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -12,6 +12,7 @@ const Navbar = () => {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { pathname } = useLocation();
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-sm bg-background/80 border-b border-border/40">
