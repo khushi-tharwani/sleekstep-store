@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { CartItem, Product, Order } from '@/types';
 import { useAuth } from './AuthContext';
@@ -311,10 +310,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fetchOrders,
       
       // Add aliases for backward compatibility
-      cartItems,
-      updateQuantity,
-      subTotal,
-      totalItems,
+      cartItems: cart,
+      updateQuantity: updateCartItem,
+      subTotal: cartTotal,
+      totalItems: cartCount,
       fetchOrderHistory
     }}>
       {children}
