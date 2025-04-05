@@ -25,7 +25,10 @@ const Products = () => {
           .from('products')
           .select('*');
         
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
 
         if (!productsData || productsData.length === 0) {
           console.log("No products found in Supabase, using mock data");

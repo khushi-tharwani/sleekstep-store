@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +9,7 @@ import { Product } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductOptions from "@/components/product/ProductOptions";
 import { products as mockProducts } from "@/data/products";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
 import QRScannerSection from "@/components/product/QRScannerSection";
 import QRCodeSection from "@/components/product/QRCodeSection";
@@ -96,11 +95,15 @@ const ProductDetail = () => {
             createdAt: productData.created_at,
           };
 
-          const availableSize = product.sizes.find((size) => size.available);
-          const availableColor = product.colors.find((color) => color.available);
+          if (!selectedSize) {
+            const availableSize = product.sizes.find((size) => size.available);
+            if (availableSize) setSelectedSize(availableSize.value);
+          }
           
-          if (availableSize) setSelectedSize(availableSize.value);
-          if (availableColor) setSelectedColor(availableColor.value);
+          if (!selectedColor) {
+            const availableColor = product.colors.find((color) => color.available);
+            if (availableColor) setSelectedColor(availableColor.name);
+          }
 
           if (productData.qr_code) {
             setQrCodeUrl(productData.qr_code);
@@ -109,10 +112,39 @@ const ProductDetail = () => {
           return product;
         }
         
-        return mockProducts.find((p) => p.id === id) || null;
+        const mockProduct = mockProducts.find((p) => p.id === id);
+        if (mockProduct) {
+          if (!selectedSize) {
+            const availableSize = mockProduct.sizes.find((size) => size.available);
+            if (availableSize) setSelectedSize(availableSize.value);
+          }
+          
+          if (!selectedColor) {
+            const availableColor = mockProduct.colors.find((color) => color.available);
+            if (availableColor) setSelectedColor(availableColor.name);
+          }
+          
+          return mockProduct;
+        }
+        
+        return null;
       } catch (error) {
         console.error("Error fetching product:", error);
-        return mockProducts.find((p) => p.id === id) || null;
+        const mockProduct = mockProducts.find((p) => p.id === id);
+        if (mockProduct) {
+          if (!selectedSize) {
+            const availableSize = mockProduct.sizes.find((size) => size.available);
+            if (availableSize) setSelectedSize(availableSize.value);
+          }
+          
+          if (!selectedColor) {
+            const availableColor = mockProduct.colors.find((color) => color.available);
+            if (availableColor) setSelectedColor(availableColor.name);
+          }
+          
+          return mockProduct;
+        }
+        return null;
       }
     },
   });
@@ -121,26 +153,26 @@ const ProductDetail = () => {
     if (!product) return;
     
     if (!selectedSize) {
-      toast({
-        title: "Please select a size",
-        variant: "destructive",
+      toast("Please select a size", {
+        description: "You need to select a size before adding to cart", 
+        position: "top-center"
       });
       return;
     }
 
     if (!selectedColor) {
-      toast({
-        title: "Please select a color",
-        variant: "destructive",
+      toast("Please select a color", {
+        description: "You need to select a color before adding to cart",
+        position: "top-center"
       });
       return;
     }
 
     addToCart(product, quantity, selectedSize, selectedColor);
     
-    toast({
-      title: "Added to Cart",
+    toast("Added to Cart", {
       description: `${product.name} has been added to your cart`,
+      position: "top-center"
     });
   };
 
@@ -187,7 +219,6 @@ const ProductDetail = () => {
         )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left column - Product images and QR code */}
           <div className="space-y-6">
             <ProductImageGallery 
               images={product.images} 
@@ -203,7 +234,6 @@ const ProductDetail = () => {
             />
           </div>
           
-          {/* Right column - Product information */}
           <div className="space-y-6">
             <ProductHeader 
               name={product.name}

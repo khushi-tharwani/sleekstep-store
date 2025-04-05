@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 // Import components and pages
 import Index from '@/pages/Index';
 import Products from '@/pages/Products';
+import ProductDetail from '@/pages/product/ProductDetail';
 import MediaGallery from '@/pages/MediaGallery';
 import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -37,6 +38,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/products" element={<Products />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/categories" element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <Categories />

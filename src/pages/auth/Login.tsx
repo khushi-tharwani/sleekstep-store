@@ -1,25 +1,26 @@
 
-import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
+import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
-  // If already authenticated, redirect to home
-  if (isAuthenticated && !authLoading) {
-    return <Navigate to="/" />;
-  }
+  // Use useEffect to handle redirects based on authentication state
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,13 +28,24 @@ const Login = () => {
     
     try {
       await login(email, password);
-      navigate("/");
+      // Navigation will happen in useEffect
     } catch (error) {
       // Error is handled in the login function via toast
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (authLoading || (isAuthenticated)) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

@@ -10,8 +10,8 @@ import {
 } from '@/components/ui/select';
 import { Product, ProductColor, ProductSize } from '@/types';
 import { useCart } from '@/context/CartContext';
-import { useToast } from '@/components/ui/use-toast';
 import { Check, ShoppingCart } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProductOptionsProps {
   product: Product;
@@ -43,7 +43,6 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({
   const quantity = externalQuantity !== undefined ? externalQuantity : localQuantity;
   
   const { addToCart } = useCart();
-  const { toast } = useToast();
 
   // Handle size change
   const handleSizeChange = (value: string) => {
@@ -74,24 +73,26 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      toast({
-        title: "Please select a size",
+      toast("Please select a size", {
         description: "You need to select a size before adding to cart",
-        variant: "destructive",
+        position: "top-center"
       });
       return;
     }
 
     if (!selectedColor) {
-      toast({
-        title: "Please select a color",
+      toast("Please select a color", {
         description: "You need to select a color before adding to cart",
-        variant: "destructive",
+        position: "top-center"
       });
       return;
     }
 
     addToCart(product, quantity, selectedSize, selectedColor);
+    toast("Added to Cart", {
+      description: `${product.name} has been added to your cart`,
+      position: "top-center"
+    });
   };
 
   // Available sizes (filter out unavailable ones)
