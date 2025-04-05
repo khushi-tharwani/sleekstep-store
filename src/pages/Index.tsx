@@ -1,10 +1,10 @@
+
 import Layout from "@/components/layout/Layout";
 import Hero from "@/components/home/Hero";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import Categories from "@/components/home/Categories";
 import Features from "@/components/home/Features";
 import QRScanner from "@/components/QRScanner";
-import WeatherShoeRecommendations from '@/components/WeatherShoeRecommendations';
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types";
@@ -74,10 +74,6 @@ const Index = () => {
         title="Trending Now" 
         description="The latest styles our customers love"
       />
-      <section className="container px-4 py-16 mx-auto">
-        <h2 className="text-3xl font-bold mb-10 text-center">Recommended For You</h2>
-        <WeatherShoeRecommendations />
-      </section>
       <Features />
     </Layout>
   );

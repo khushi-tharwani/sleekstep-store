@@ -15,6 +15,7 @@ import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
 import AdminLogin from '@/pages/auth/AdminLogin';
 import Profile from '@/pages/user/Profile';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 // Create lazy-loaded component for Categories
 const Categories = React.lazy(() => import('@/pages/Categories'));
@@ -31,7 +32,7 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/products" element={<Products />} />
           <Route path="/categories" element={
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<LoadingSpinner />}>
               <Categories />
             </Suspense>
           } />
