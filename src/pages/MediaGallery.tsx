@@ -9,32 +9,32 @@ const MediaGallery: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-6">Media Gallery</h1>
+        <h1 className="text-3xl font-bold mb-6">Footwear Media Gallery</h1>
         
         <div className="grid gap-8">
           <Tabs defaultValue="videos" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
               <TabsTrigger value="videos">Product Videos</TabsTrigger>
-              <TabsTrigger value="presentations">Presentations</TabsTrigger>
+              <TabsTrigger value="presentations">Brand Story</TabsTrigger>
             </TabsList>
             
             <TabsContent value="videos">
               <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <VideoPlayer 
                   src="https://samplelib.com/lib/preview/mp4/sample-5s.mp4"
-                  title="Latest Sneaker Collection"
+                  title="SleekStep Summer Collection"
                   poster="https://images.unsplash.com/photo-1549298916-b41d501d3772"
                 />
                 
                 <VideoPlayer 
                   src="https://samplelib.com/lib/preview/mp4/sample-10s.mp4"
-                  title="Fashion Footwear 2025"
+                  title="Running Shoes Technology"
                   poster="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a"
                 />
                 
                 <VideoPlayer 
                   src="https://samplelib.com/lib/preview/mp4/sample-15s.mp4"
-                  title="Athletic Performance Shoes"
+                  title="Lifestyle Footwear Showcase"
                   poster="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa"
                 />
               </div>
@@ -72,11 +72,11 @@ const MediaGallery: React.FC = () => {
           </Tabs>
           
           <section className="mt-12">
-            <h2 className="text-2xl font-bold mb-4">The Art of Shoemaking</h2>
+            <h2 className="text-2xl font-bold mb-4">Master Craftsmanship</h2>
             <div className="max-w-4xl mx-auto">
               <VideoPlayer 
                 src="https://samplelib.com/lib/preview/mp4/sample-30s.mp4"
-                title="Master Craftsmanship: From Design to Product"
+                title="The Art of Shoemaking: From Design to Product"
                 poster="https://images.unsplash.com/photo-1591047139829-d91aecb6caea"
                 className="w-full"
               />

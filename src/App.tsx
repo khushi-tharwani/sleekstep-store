@@ -19,6 +19,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import Orders from '@/pages/orders/Orders';
+import Cart from '@/pages/cart/Cart';
 
 // Create lazy-loaded component for Categories
 const Categories = React.lazy(() => import('@/pages/Categories'));
@@ -59,7 +60,7 @@ function App() {
                   <Orders />
                 </ProtectedRoute>
               } />
-              <Route path="/cart" element={<div>Cart Page</div>} />
+              <Route path="/cart" element={<Cart />} />
               
               {/* Admin Routes */}
               <Route path="/admin/*" element={
