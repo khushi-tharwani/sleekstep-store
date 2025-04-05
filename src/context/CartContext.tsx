@@ -40,11 +40,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  // Load cart items using localStorage
   const loadCart = async () => {
     try {
       if (!user) {
-        // Load from localStorage if available
         const savedCart = localStorage.getItem('cart');
         if (savedCart) {
           setCart(JSON.parse(savedCart));
@@ -52,7 +50,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // For authenticated users, load from localStorage with user-specific key
       const savedCart = localStorage.getItem(`cart_${user.id}`);
       if (savedCart) {
         setCart(JSON.parse(savedCart));
@@ -62,7 +59,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Save cart to localStorage
   const saveCart = (updatedCart: CartItem[]) => {
     if (user) {
       localStorage.setItem(`cart_${user.id}`, JSON.stringify(updatedCart));
@@ -71,10 +67,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Add to cart
   const addToCart = (product: Product, quantity: number, size: string, color: string) => {
     setCart(prevCart => {
-      // Check if the product with same size and color already exists in cart
       const existingItemIndex = prevCart.findIndex(
         item => item.productId === product.id && item.size === size && item.color === color
       );
@@ -82,13 +76,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedCart = [...prevCart];
       
       if (existingItemIndex >= 0) {
-        // Update quantity of the existing item
         updatedCart[existingItemIndex] = {
           ...updatedCart[existingItemIndex],
           quantity: updatedCart[existingItemIndex].quantity + quantity
         };
       } else {
-        // Add new item to cart
         updatedCart.push({
           id: nanoid(),
           productId: product.id,
@@ -105,7 +97,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Update cart item
   const updateCartItem = (id: string, quantity: number) => {
     setCart(prevCart => {
       const updatedCart = prevCart.map(item => 
@@ -117,7 +108,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Remove from cart
   const removeFromCart = (id: string) => {
     setCart(prevCart => {
       const itemToRemove = prevCart.find(item => item.id === id);
@@ -133,7 +123,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Clear cart
   const clearCart = () => {
     setCart([]);
     if (user) {
@@ -143,16 +132,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Calculate cart total
   const cartTotal = cart.reduce(
     (total, item) => total + (item.product.salePrice || item.product.price) * item.quantity,
     0
   );
 
-  // Calculate cart count
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
 
-  // Checkout cart - ensures order data is stored in the database
   const checkoutCart = async (paymentMethod: string, addressId: string): Promise<boolean> => {
     if (!user || cart.length === 0) {
       toast.error("Cart is empty or you're not logged in");
@@ -162,7 +148,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
 
     try {
-      // Create the order in the database
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -181,7 +166,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log("Order created:", orderData);
 
-      // Create order items in the database
       const orderItems = cart.map(item => ({
         order_id: orderData.id,
         product_id: item.productId,
@@ -193,22 +177,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log("Creating order items:", orderItems);
 
-      // Insert order items
-      for (const item of orderItems) {
-        const { error: itemError } = await supabase
-          .from('order_items')
-          .insert(item);
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
 
-        if (itemError) {
-          console.error("Error creating order item:", itemError);
-          throw itemError;
-        }
+      if (itemsError) {
+        console.error("Error creating order items:", itemsError);
+        throw itemsError;
       }
 
-      // Clear the cart after successful order
       clearCart();
       
-      // Success - we'll handle navigation in the component that calls this function
+      toast.success("Order placed successfully!");
       return true;
     } catch (error) {
       console.error('Error processing checkout:', error);
@@ -219,7 +199,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch orders from the database
   const fetchOrders = async () => {
     if (!user) return;
     
@@ -239,7 +218,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data) {
-        // Ensure all orders have the correct status type
         const typedOrders = data.map(order => ({
           ...order,
           status: order.status as 'processing' | 'shipped' | 'delivered' | 'cancelled'
@@ -255,7 +233,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch order history - implementation for Profile page
   const fetchOrderHistory = async (): Promise<Order[]> => {
     if (!user) return [];
     
@@ -274,7 +251,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data) {
-        // Ensure all orders have the correct status type
         return data.map(order => ({
           ...order,
           status: order.status as 'processing' | 'shipped' | 'delivered' | 'cancelled'
@@ -289,7 +265,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create aliases for properties needed by components
   const cartItems = cart;
   const updateQuantity = updateCartItem;
   const subTotal = cartTotal;
@@ -309,7 +284,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       checkoutCart,
       fetchOrders,
       
-      // Add aliases for backward compatibility
       cartItems: cart,
       updateQuantity: updateCartItem,
       subTotal: cartTotal,

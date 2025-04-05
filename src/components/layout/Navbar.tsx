@@ -198,6 +198,13 @@ const Navbar = () => {
             >
               Categories
             </Link>
+            <Link 
+              to="/media-gallery" 
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-secondary"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Media
+            </Link>
             
             {isAdmin && (
               <Link 

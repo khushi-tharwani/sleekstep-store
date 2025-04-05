@@ -4,44 +4,33 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
-import { LogIn, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Use useEffect to handle redirects based on authentication state
-  // This fixes the infinite render loop by moving redirects out of render phase
   useEffect(() => {
-    if (!authLoading) {
-      // If already authenticated as admin, redirect to admin products
-      if (isAuthenticated && isAdmin) {
-        navigate("/admin/products");
-      }
-      // If authenticated but not admin, show error toast and redirect
-      else if (isAuthenticated && !isAdmin) {
-        toast("Access Denied", {
-          description: "This login is only for administrators",
-          position: "top-center"
-        });
-        navigate("/");
-      }
+    if (!authLoading && isAuthenticated && isAdmin) {
+      navigate("/admin");
+    } else if (!authLoading && isAuthenticated && !isAdmin) {
+      toast.error("You don't have admin privileges");
+      navigate("/");
     }
-  }, [isAuthenticated, isAdmin, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      await login(email, password, true); // Added third parameter to check for admin
+      await login(email, password, true);
+      // Navigation will happen in useEffect
     } catch (error) {
       // Error is handled in the login function via toast
     } finally {
@@ -49,8 +38,7 @@ const AdminLogin = () => {
     }
   };
 
-  // Don't render the form if we're authenticated and/or redirecting
-  if (authLoading || (isAuthenticated && (isAdmin || !isAdmin))) {
+  if (authLoading || (isAuthenticated && isAdmin)) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -65,17 +53,14 @@ const AdminLogin = () => {
       <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <div className="bg-dark-100 p-8 rounded-lg border border-white/10 shadow-lg">
-            <div className="flex items-center justify-center mb-6">
-              <Shield className="h-8 w-8 text-primary" />
-            </div>
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold">Admin Login</h1>
-              <p className="text-gray-400 mt-2">Sign in to access admin dashboard</p>
+              <p className="text-gray-400 mt-2">Sign in to your admin account</p>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Admin Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -105,21 +90,15 @@ const AdminLogin = () => {
                 className="w-full bg-primary hover:bg-primary/90" 
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign in as Admin"}
+                {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
             
-            <p className="mt-6 text-center text-sm text-gray-400">
-              Not an admin?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Regular login
+            <div className="mt-6 text-center text-sm text-gray-400">
+              Need an admin account?{" "}
+              <Link to="/admin-signup" className="text-primary hover:underline">
+                Create admin account
               </Link>
-            </p>
-            
-            <div className="mt-6 border-t border-white/10 pt-4 text-xs text-gray-500 text-center">
-              <p>For demo purposes, use admin account:</p>
-              <p className="mt-1">Email: admin@example.com</p>
-              <p>Password: admin123</p>
             </div>
           </div>
         </div>
