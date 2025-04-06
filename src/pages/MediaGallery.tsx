@@ -21,19 +21,19 @@ const MediaGallery: React.FC = () => {
             <TabsContent value="videos">
               <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <VideoPlayer 
-                  src="https://www.shutterstock.com/shutterstock/videos/1094966206/preview/stock-footage-sport-running-shoes-close-up-banner-athlete-standing-on-road-at-sunset-mountain-active-life-sport.mp4"
+                  src="https://video.fyvr3-4.fna.fbcdn.net/o1/v/t2/f1/m69/GESCMDVuWvWAJEEMAADFbQFRHSQwbSEZAAAF.mp4?efg=eyJ2ZW5jb2RlX3RhZyI6Im9lcF9oZCJ9&_nc_ht=video.fyvr3-4.fna.fbcdn.net&_nc_cat=109&vs=461990676213170_505770050&_nc_vs=HBksFQIYT2lnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzJGLzdFUUNNRFZ1V3ZXQUpFRU1BQURGYlFGUkhTUXdiU0VaQUFBRgUAAsgBABUAGCRHSmZkZ1FzTDNwR0VUX3dCQUNZb3d5RXNRY0FmYnBSMUFBQUYVAgLIAQBLBogScHJvZ3Jlc3NpdmVfcmVjaXBlATENc3Vic2FtcGxlX2ZwcwAQdm1hZl9lbmFibGVfbnN1YgAgbWVhc3VyZV9vcmlnaW5hbF9yZXNvbHV0aW9uX3NzaW0AKGNvbXB1dGVfc3NpbV9vbmx5X2F0X29yaWdpbmFsX3Jlc29sdXRpb24AEWRpc2FibGVfcG9zdF9wdnFzABUAJQAcAAAmlrCr1Y6S4hAVAigCQzMYC3Z0c19wcmV2aWV3HBdAJfgAAAAAGBpkYXNoX2k0bGl0ZWJhc2ljXzVzZWNnb3BfaHEyX2ZyYWdfMl92aWRlbxIAGBh2aWRlb3MudnRzLmNhbGxiYWNrLnByb2Q4ElZJREVPX1ZJRVdfUkVRVUVTVBsKiBVvZW1fdGFyZ2V0X2VuY29kZV90YWcGb2VwX2hkE29lbV9yZXF1ZXN0X3RpbWVfbXMBMAxvZW1fY2ZnX3J1bGUHdW5tdXRlZBNvZW1fcm9pX3JlYWNoX2NvdW50ATARb2VtX2lzX2V4cGVyaW1lbnQADG9lbV92aWRlb19pZA80NzMzOTYwMDgyNTA5MzESb2VtX3ZpZGVvX2Fzc2V0X2lkDzQ2MTk5MDY3MjIxMzE3MBVvZW1fdmlkZW9fcmVzb3VyY2VfaWQPNDYxOTkwNjcyMjEzMTcwHG9lbV9zb3VyY2VfdmlkZW9fZW5jb2RpbmdfaWQPODA0MjQxODQwNzgxMjI1JQIcHBwXcQAVACUCKAJDMxgLdnRzX3ByZXZpZXccF0Al-AAAAAAYGmRhc2hfaTRsaXRlYmFzaWNfNXNlY2dvcF9ocTJfZnJhZ18yX3ZpZGVvEgAYGHZpZGVvcy52dHMuY2FsbGJhY2sucHJvZA%3D%3D&ccb=9-4&oh=00_AfBybC8t3DvfJdSCkP84Qv4yP9qrHAyzdju_ImN4m4QLSQ&oe=66D2E674&_nc_sid=b79e4f"
                   title="SleekStep Summer Collection"
                   poster="https://images.unsplash.com/photo-1549298916-b41d501d3772"
                 />
                 
                 <VideoPlayer 
-                  src="https://www.shutterstock.com/shutterstock/videos/1061087567/preview/stock-footage-women-tying-shoes-and-starting-to-run-during-sunset-time-female-athlete-preparing-for-running.mp4"
+                  src="https://video.xx.fbcdn.net/v/t42.1790-2/254318353_881521589404483_8747734852836482180_n.mp4?_nc_cat=102&ccb=1-7&_nc_sid=55d0d3&efg=eyJybHIiOjMwMCwicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&_nc_ohc=QULqBGDLz30AX-cvAmw&rl=300&vabr=131&_nc_ht=video.fevn1-4.fna&edm=AGo2L-IEAAAA&oh=00_AfC8BfbxZIg_uFnSLwT3o6PFDHhPVYp5z5ZB7mEDPgigRQ&oe=66D2ED63"
                   title="Running Shoes Technology"
                   poster="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a"
                 />
                 
                 <VideoPlayer 
-                  src="https://www.shutterstock.com/shutterstock/videos/1068903895/preview/stock-footage-closeup-of-man-tying-sport-shoes-and-starting-running-on-road-at-sunset-male-runner-jogger.mp4"
+                  src="https://video.xx.fbcdn.net/v/t42.1790-2/10000000_1181013243030445_4235876566865613620_n.mp4?_nc_cat=101&ccb=1-7&_nc_sid=55d0d3&efg=eyJybHIiOjMwMCwicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&_nc_ohc=9ry9zMvYgRAAX_ziyuD&rl=300&vabr=145&_nc_ht=video.fevn1-1.fna&edm=AGo2L-IEAAAA&oh=00_AfCSeAKmzI1c_7Zpy-TTPqoTcPK7Of95_KHq7qlY_nxx5Q&oe=66D2ED83"
                   title="Lifestyle Footwear Showcase"
                   poster="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa"
                 />
@@ -49,7 +49,7 @@ const MediaGallery: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <VideoPlayer 
-                      src="https://www.shutterstock.com/shutterstock/videos/1046689489/preview/stock-footage-production-of-mens-shoes-on-a-shoe-factory-sewing-a-leather-shoe-on-a-sewing-machine-inside-shoe.mp4"
+                      src="https://video.xx.fbcdn.net/v/t42.1790-2/10000000_1050349679628013_3485877561140488007_n.mp4?_nc_cat=103&ccb=1-7&_nc_sid=55d0d3&efg=eyJybHIiOjMwMCwicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&_nc_ohc=VFf6TqV4bQAAX-0JSGv&rl=300&vabr=123&_nc_ht=video.fevn1-2.fna&edm=AGo2L-IEAAAA&oh=00_AfC2bACT2CwcW-Dx1ZTuzTZnJ2c3Sg7RmVLjY_DDniRfHw&oe=66D2ED85"
                       poster="https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb"
                     />
                   </CardContent>
@@ -62,7 +62,7 @@ const MediaGallery: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <VideoPlayer 
-                      src="https://www.shutterstock.com/shutterstock/videos/1069980336/preview/stock-footage-worker-footwear-factory-puts-shoes-in-box-man-hands-packing-new-stylish-brown-leather-boots-in.mp4"
+                      src="https://video.xx.fbcdn.net/v/t42.1790-2/10000000_792358675404560_1110976673199289877_n.mp4?_nc_cat=109&ccb=1-7&_nc_sid=55d0d3&efg=eyJybHIiOjMwMCwicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&_nc_ohc=QS34VGgprgMAX8Gui6d&rl=300&vabr=117&_nc_ht=video.fevn1-1.fna&edm=AGo2L-IEAAAA&oh=00_AfCz0WnPRxMEw38Tcqw0O_u5EQPDxheKt4l9ydq9yVULlA&oe=66D2ED4D"
                       poster="https://images.unsplash.com/photo-1606045604216-2ce9db8a3420"
                     />
                   </CardContent>
@@ -75,7 +75,7 @@ const MediaGallery: React.FC = () => {
             <h2 className="text-2xl font-bold mb-4">Master Craftsmanship</h2>
             <div className="max-w-4xl mx-auto">
               <VideoPlayer 
-                src="https://www.shutterstock.com/shutterstock/videos/1042866255/preview/stock-footage-closeup-of-shoemaker-hands-sewing-leather-shoe-by-hand-cobbler-in-workshop-making-exclusive-footwear.mp4"
+                src="https://video.xx.fbcdn.net/v/t42.1790-2/10000000_1158664188343880_7394797518433701940_n.mp4?_nc_cat=104&ccb=1-7&_nc_sid=55d0d3&efg=eyJybHIiOjMwMCwicmxhIjo1MTIsInZlbmNvZGVfdGFnIjoic3ZlX3NkIn0%3D&_nc_ohc=QNqeZcW6UxsAX8itaSJ&rl=300&vabr=173&_nc_ht=video.fevn1-4.fna&edm=AGo2L-IEAAAA&oh=00_AfBEddxcLA2QY4Pfct543vG9eseenX40Xr3gRygYTAZqpQ&oe=66D2ED25"
                 title="The Art of Shoemaking: From Design to Product"
                 poster="https://images.unsplash.com/photo-1591047139829-d91aecb6caea"
                 className="w-full"

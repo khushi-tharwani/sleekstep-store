@@ -22,6 +22,9 @@ import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import Orders from '@/pages/orders/Orders';
 import Cart from '@/pages/cart/Cart';
+import CheckoutPage from '@/pages/checkout/Checkout';
+import PaymentSuccess from '@/pages/checkout/PaymentSuccess';
+import AdminDashboard from '@/pages/admin/Dashboard';
 
 // Create lazy-loaded component for Categories
 const Categories = React.lazy(() => import('@/pages/Categories'));
@@ -65,11 +68,21 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={
+                <ProtectedRoute>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/payment-success" element={
+                <ProtectedRoute>
+                  <PaymentSuccess />
+                </ProtectedRoute>
+              } />
               
               {/* Admin Routes */}
-              <Route path="/admin/*" element={
+              <Route path="/admin" element={
                 <AdminRoute>
-                  <div>Admin Dashboard</div>
+                  <AdminDashboard />
                 </AdminRoute>
               } />
               
