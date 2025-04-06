@@ -2,7 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { CartItem, Product, Order } from '@/types';
 import { useAuth } from './AuthContext';
-import { supabase, deleteCartItems, addCartItem, getCartWithProducts } from '@/integrations/supabase/client';
+import { supabase, deleteCartItems, addCartItem, getCartWithProducts, CartItemRPC } from '@/integrations/supabase/client';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 
@@ -90,10 +90,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Try to load cart items via RPC function
       const { data, error } = await getCartWithProducts(user.id);
       
-      if (!error && data && Array.isArray(data) && data.length > 0) {
+      if (!error && data && data.length > 0) {
         // Convert response to CartItem format
         const cartItems: CartItem[] = await Promise.all(
-          data.map(async (item: any) => {
+          data.map(async (item: CartItemRPC) => {
             // Fetch the product details
             const { data: productData } = await supabase
               .from('products')

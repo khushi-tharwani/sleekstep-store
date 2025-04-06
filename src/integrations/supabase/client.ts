@@ -11,23 +11,8 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Add cart operations as direct functions to avoid type issues
-export const deleteCartItems = async (userId: string) => {
-  return await supabase.rpc('delete_cart_items', { user_id_param: userId });
-};
-
-export const addCartItem = async (userId: string, productId: string, quantity: number, size: string, color: string) => {
-  return await supabase.rpc('add_cart_item', { 
-    user_id_param: userId, 
-    product_id_param: productId, 
-    quantity_param: quantity, 
-    size_param: size, 
-    color_param: color 
-  });
-};
-
-// Define a type for the cart item returned by the RPC function
-interface CartItemRPC {
+// Define types for RPC functions
+export interface CartItemRPC {
   id: string;
   user_id: string;
   product_id: string;
@@ -38,13 +23,30 @@ interface CartItemRPC {
   updated_at: string;
 }
 
+// Add cart operations as direct functions to avoid type issues
+export const deleteCartItems = async (userId: string) => {
+  // Use any to bypass TypeScript checking for the RPC function name
+  return await supabase.rpc('delete_cart_items' as any, { user_id_param: userId });
+};
+
+export const addCartItem = async (userId: string, productId: string, quantity: number, size: string, color: string) => {
+  // Use any to bypass TypeScript checking for the RPC function name
+  return await supabase.rpc('add_cart_item' as any, { 
+    user_id_param: userId, 
+    product_id_param: productId, 
+    quantity_param: quantity, 
+    size_param: size, 
+    color_param: color 
+  });
+};
+
 export const getCartWithProducts = async (userId: string) => {
-  const response = await supabase.rpc('get_cart_with_products', { user_id_param: userId });
+  // Use any to bypass TypeScript checking for the RPC function name
+  const { data, error } = await supabase.rpc('get_cart_with_products' as any, { user_id_param: userId });
   
-  // Cast the response data to the appropriate type
-  if (response.data) {
-    response.data = response.data as CartItemRPC[];
-  }
-  
-  return response;
+  // Return properly typed data
+  return { 
+    data: data as CartItemRPC[] | null, 
+    error 
+  };
 };
