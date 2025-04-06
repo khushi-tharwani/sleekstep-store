@@ -87,12 +87,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       
       // Try to load cart items via RPC function
-      const { data: cartData, error: cartError } = await getCartWithProducts(user.id);
+      const { data, error } = await getCartWithProducts(user.id);
       
-      if (!cartError && cartData && Array.isArray(cartData) && cartData.length > 0) {
+      if (!error && data && Array.isArray(data) && data.length > 0) {
         // Convert response to CartItem format
         const cartItems: CartItem[] = await Promise.all(
-          cartData.map(async (item: any) => {
+          data.map(async (item: any) => {
             // Fetch the product details
             const { data: productData } = await supabase
               .from('products')
