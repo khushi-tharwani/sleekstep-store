@@ -1,8 +1,7 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { CartItem, Product, Order } from '@/types';
 import { useAuth } from './AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, deleteCartItems, addCartItem, getCartWithProducts } from '@/integrations/supabase/client';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 
@@ -50,19 +49,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const productIds = updatedCart.map(item => item.productId);
       
       // Delete existing cart items
-      await supabase.rpc('delete_cart_items', { user_id_param: user.id });
+      await deleteCartItems(user.id);
       
       // Then insert the current cart items
       if (updatedCart.length > 0) {
         // Insert items one by one to avoid type issues
         for (const item of updatedCart) {
-          await supabase.rpc('add_cart_item', {
-            user_id_param: user.id,
-            product_id_param: item.productId,
-            quantity_param: item.quantity,
-            size_param: item.size,
-            color_param: item.color
-          });
+          await addCartItem(
+            user.id,
+            item.productId,
+            item.quantity,
+            item.size,
+            item.color
+          );
         }
         
         console.log('Cart successfully synced with database');
@@ -88,14 +87,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       
       // Try to load cart items via RPC function
-      const { data: cartData, error: cartError } = await supabase.rpc('get_cart_with_products', {
-        user_id_param: user.id
-      });
-        
-      if (!cartError && cartData && cartData.length > 0) {
+      const { data: cartData, error: cartError } = await getCartWithProducts(user.id);
+      
+      if (!cartError && cartData && Array.isArray(cartData) && cartData.length > 0) {
         // Convert response to CartItem format
         const cartItems: CartItem[] = await Promise.all(
-          cartData.map(async (item) => {
+          cartData.map(async (item: any) => {
             // Fetch the product details
             const { data: productData } = await supabase
               .from('products')
@@ -244,8 +241,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user) {
       localStorage.removeItem(`cart_${user.id}`);
       // Also clear cart items from database
-      supabase
-        .rpc('delete_cart_items', { user_id_param: user.id })
+      deleteCartItems(user.id)
         .then(({ error }) => {
           if (error) {
             console.error('Error clearing cart from database:', error);

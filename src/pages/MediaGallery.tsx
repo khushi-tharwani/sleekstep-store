@@ -31,6 +31,22 @@ const MediaGallery = () => {
       url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86',
       duration: '3:15'
+    },
+    {
+      id: '4',
+      title: 'Trending Sports Fashion',
+      description: 'Explore the latest trends in sports fashion and athletic wear',
+      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+      thumbnail: 'https://images.unsplash.com/photo-1556906781-9a412961c28c',
+      duration: '4:20'
+    },
+    {
+      id: '5',
+      title: 'Athlete Interviews',
+      description: 'Exclusive interviews with professional athletes about their favorite gear',
+      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+      thumbnail: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa',
+      duration: '5:00'
     }
   ];
 
