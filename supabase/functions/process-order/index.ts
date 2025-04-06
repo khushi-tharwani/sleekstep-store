@@ -1,231 +1,116 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Log request info for debugging
-    console.log("Processing order request received");
+    // Get order data from request
+    const { orderId } = await req.json();
     
-    // Create a Supabase client with the Auth context of the logged in user
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    )
-
-    // Get auth user
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser()
-
-    if (!user) {
-      console.log("Unauthorized request - no user found");
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        }
-      )
-    }
-
-    // Parse the request body
-    let requestData;
-    try {
-      requestData = await req.json();
-      console.log("Request data:", requestData);
-    } catch (e) {
-      console.error("Failed to parse request body:", e);
-      return new Response(
-        JSON.stringify({ error: 'Invalid request body' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-
-    const { orderId } = requestData;
-
     if (!orderId) {
-      console.log("Missing order ID in request");
       return new Response(
-        JSON.stringify({ error: 'Missing order ID' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
+        JSON.stringify({ error: "Order ID is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Get the order details
-    console.log("Fetching order details for ID:", orderId);
-    const { data: order, error: orderError } = await supabaseClient
-      .from('orders')
-      .select(`
-        *,
-        order_items (*)
-      `)
-      .eq('id', orderId)
-      .single()
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (orderError) {
+    // Fetch order details
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
       console.error("Error fetching order:", orderError);
       return new Response(
-        JSON.stringify({ error: 'Order not found', details: orderError }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
-        }
-      )
+        JSON.stringify({ error: "Order not found", details: orderError }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Check if the order belongs to the authenticated user
-    if (order.user_id !== user.id) {
-      console.log("Unauthorized access to order. Order user:", order.user_id, "Request user:", user.id);
+    // Fetch user shipping address
+    const { data: address, error: addressError } = await supabase
+      .from('addresses')
+      .select('*')
+      .eq('id', order.address_id)
+      .single();
+
+    if (addressError || !address) {
+      console.error("Error fetching address:", addressError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized access to order' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        }
-      )
+        JSON.stringify({ error: "Address not found", details: addressError }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    console.log("Order found, proceeding with payment processing");
+    // Simulate external API call to shoe inventory system
+    console.log("Connecting to external shoe inventory API...");
     
-    // Fetch shoe data from external API
-    try {
-      // Using the Shoe API to get product information and inventory data
-      const shoeResponse = await fetch('https://api.sampleapis.com/shoes/sneakers');
-      
-      if (!shoeResponse.ok) {
-        throw new Error(`External API responded with status: ${shoeResponse.status}`);
-      }
-      
-      const shoeData = await shoeResponse.json();
-      console.log("Retrieved shoe data from external API:", shoeData.length, "items");
-      
-      // Process the external API data
-      // Here we could update inventory, validate prices, etc.
-      const externalProducts = shoeData.map((shoe: any) => ({
-        id: shoe.id,
-        name: shoe.name,
-        brand: shoe.brand || 'Unknown',
-        year: shoe.releaseDate || 'Unknown',
-        price: shoe.retailPrice || 0
-      }));
-      
-      console.log("Processed external product data:", externalProducts.slice(0, 3));
-      
-      // You could do something with this data like verify pricing or check stock
-      // For demonstration purposes, we're just logging it
-    } catch (apiError) {
-      console.error("Error fetching external shoe data:", apiError);
-      // Continue processing the order even if external API call fails
+    // This would be a real API call in a production environment
+    // For example: const response = await fetch("https://api.shoeinventory.com/orders", {...})
+    
+    // Simulate API processing
+    const externalAPIResponse = {
+      success: true,
+      orderId: orderId,
+      trackingNumber: `SHOE-${Math.floor(Math.random() * 1000000)}`,
+      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      message: "Order successfully processed by shoe inventory system"
+    };
+    
+    console.log("External API response:", externalAPIResponse);
+
+    // Update order with tracking information
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({
+        status: 'processing',
+        updated_at: new Date().toISOString(),
+        // You could store external API details in a metadata column
+        // metadata: { tracking: externalAPIResponse.trackingNumber, estimatedDelivery: externalAPIResponse.estimatedDelivery }
+      })
+      .eq('id', orderId);
+
+    if (updateError) {
+      console.error("Error updating order:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Failed to update order", details: updateError }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Example: Integrate with an external payment processing API
-    // This is a mock implementation - you would replace this with an actual API call
-    const paymentResult = await processPayment(order);
-
-    // Update order status based on payment result
-    if (paymentResult.success) {
-      console.log("Payment processed successfully, updating order status");
-      const { error: updateError } = await supabaseClient
-        .from('orders')
-        .update({ status: 'processing' })
-        .eq('id', orderId)
-
-      if (updateError) {
-        console.error("Error updating order status:", updateError);
-        throw updateError;
-      }
-
-      // Send a notification to the customer
-      await sendOrderConfirmation(order, user.email);
-
-      return new Response(
-        JSON.stringify({
-          message: 'Order processed successfully',
-          orderStatus: 'processing',
-          paymentId: paymentResult.paymentId
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      )
-    } else {
-      console.log("Payment processing failed");
-      return new Response(
-        JSON.stringify({
-          error: 'Payment processing failed',
-          details: paymentResult.error
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-  } catch (error) {
-    console.error('Error processing order:', error);
+    // Return success response
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    )
-  }
-})
+      JSON.stringify({ 
+        success: true, 
+        message: "Order processed successfully",
+        orderId: orderId,
+        externalProcessing: externalAPIResponse
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
-// Mock function for payment processing
-async function processPayment(order: any) {
-  // In a real implementation, you would integrate with a payment gateway API
-  console.log('Processing payment for order:', order.id);
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Log the order details for debugging
-  console.log('Order details:', {
-    id: order.id,
-    total: order.total,
-    payment_method: order.payment_method
-  });
-  
-  return {
-    success: true,
-    paymentId: `pay_${Math.random().toString(36).substring(2, 15)}`
+  } catch (error) {
+    console.error("Error processing order:", error);
+    return new Response(
+      JSON.stringify({ error: "Internal server error", details: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
-}
-
-// Mock function for sending order confirmation
-async function sendOrderConfirmation(order: any, email: string) {
-  // In a real implementation, you would integrate with an email service
-  console.log(`Sending order confirmation to ${email} for order ${order.id}`);
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return {
-    success: true
-  }
-}
+});
