@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,13 +27,42 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
+  // Initialize video on mount
+  useEffect(() => {
+    if (videoRef.current) {
+      if (autoplay) {
+        // Try to play the video automatically
+        const playPromise = videoRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log('Video autoplay started successfully');
+              setIsPlaying(true);
+            })
+            .catch(error => {
+              console.log('Autoplay prevented:', error);
+              setIsPlaying(false);
+            });
+        }
+      }
+    }
+  }, [autoplay]);
 
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        // Use a user interaction to start playing
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log('Error playing video:', error);
+          });
+        }
       }
       setIsPlaying(!isPlaying);
     }
@@ -65,6 +94,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
+      setIsVideoLoaded(true);
     }
   };
 
@@ -91,7 +121,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   // Handle fullscreen change event
-  React.useEffect(() => {
+  useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
@@ -102,21 +132,45 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, []);
 
+  // Handle video click directly to toggle play/pause
+  const handleVideoClick = (e: React.MouseEvent) => {
+    // Prevent the click if it's on a control
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    togglePlay();
+  };
+
   return (
     <Card className={`overflow-hidden ${className}`}>
-      <div className="relative aspect-video">
+      <div 
+        className="relative aspect-video" 
+        onClick={handleVideoClick}
+      >
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover cursor-pointer"
           src={src}
           poster={poster}
-          autoPlay={autoplay}
-          muted={autoplay || isMuted}
           playsInline
+          preload="metadata"
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={() => setIsPlaying(false)}
+          onError={(e) => console.error("Video error:", e)}
         />
+        
+        {!isVideoLoaded && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+          </div>
+        )}
+        
+        {!isPlaying && isVideoLoaded && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <Play className="h-16 w-16 text-white opacity-80" />
+          </div>
+        )}
         
         {title && (
           <div className="absolute top-0 left-0 w-full bg-gradient-to-b from-black/70 to-transparent p-4">
