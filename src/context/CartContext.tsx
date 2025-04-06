@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { CartItem, Product, Order } from '@/types';
 import { useAuth } from './AuthContext';
@@ -148,6 +149,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
 
     try {
+      // Log data for debugging
+      console.log("Checkout data:", { 
+        user_id: user.id, 
+        total: cartTotal, 
+        payment_method: paymentMethod, 
+        address_id: addressId,
+        cart_items: cart.length
+      });
+
+      // Create order in database
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -160,12 +171,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('id')
         .single();
 
-      if (orderError || !orderData) {
-        throw orderError || new Error('Failed to create order');
+      if (orderError) {
+        console.error("Order creation error:", orderError);
+        throw orderError;
+      }
+
+      if (!orderData) {
+        throw new Error('Failed to create order - no data returned');
       }
 
       console.log("Order created:", orderData);
 
+      // Process order with Supabase Edge Function
+      const { data: processData, error: processError } = await supabase.functions.invoke('process-order', {
+        body: { orderId: orderData.id }
+      });
+
+      if (processError) {
+        console.error("Error processing order:", processError);
+        // Continue with order items creation even if processing fails
+        // We don't want to throw here as the order is already created
+      } else {
+        console.log("Order processed:", processData);
+      }
+
+      // Create order items
       const orderItems = cart.map(item => ({
         order_id: orderData.id,
         product_id: item.productId,
@@ -192,7 +222,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (error) {
       console.error('Error processing checkout:', error);
-      toast.error("Failed to complete your order");
+      toast.error("Failed to complete your order: " + (error as Error).message);
       return false;
     } finally {
       setLoading(false);

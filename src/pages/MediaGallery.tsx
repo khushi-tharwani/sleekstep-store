@@ -21,19 +21,19 @@ const MediaGallery: React.FC = () => {
             <TabsContent value="videos">
               <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <VideoPlayer 
-                  src="https://samplelib.com/lib/preview/mp4/sample-5s.mp4"
+                  src="https://static.videezy.com/system/resources/previews/000/044/603/original/shoes.mp4"
                   title="SleekStep Summer Collection"
                   poster="https://images.unsplash.com/photo-1549298916-b41d501d3772"
                 />
                 
                 <VideoPlayer 
-                  src="https://samplelib.com/lib/preview/mp4/sample-10s.mp4"
+                  src="https://static.videezy.com/system/resources/previews/000/046/474/original/banana-shoes.mp4"
                   title="Running Shoes Technology"
                   poster="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a"
                 />
                 
                 <VideoPlayer 
-                  src="https://samplelib.com/lib/preview/mp4/sample-15s.mp4"
+                  src="https://static.videezy.com/system/resources/previews/000/039/215/original/30_01_03_99.mp4"
                   title="Lifestyle Footwear Showcase"
                   poster="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa"
                 />
@@ -49,7 +49,7 @@ const MediaGallery: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <VideoPlayer 
-                      src="https://samplelib.com/lib/preview/mp4/sample-20s.mp4"
+                      src="https://static.videezy.com/system/resources/previews/000/040/608/original/SP028_02.mp4"
                       poster="https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb"
                     />
                   </CardContent>
@@ -62,7 +62,7 @@ const MediaGallery: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <VideoPlayer 
-                      src="https://samplelib.com/lib/preview/mp4/sample-30s.mp4"
+                      src="https://static.videezy.com/system/resources/previews/000/044/556/original/Nike-Jog.mp4"
                       poster="https://images.unsplash.com/photo-1606045604216-2ce9db8a3420"
                     />
                   </CardContent>
@@ -75,7 +75,7 @@ const MediaGallery: React.FC = () => {
             <h2 className="text-2xl font-bold mb-4">Master Craftsmanship</h2>
             <div className="max-w-4xl mx-auto">
               <VideoPlayer 
-                src="https://samplelib.com/lib/preview/mp4/sample-30s.mp4"
+                src="https://static.videezy.com/system/resources/previews/000/040/492/original/KF7_69.mp4"
                 title="The Art of Shoemaking: From Design to Product"
                 poster="https://images.unsplash.com/photo-1591047139829-d91aecb6caea"
                 className="w-full"

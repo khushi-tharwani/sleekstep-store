@@ -14,6 +14,9 @@ serve(async (req) => {
   }
 
   try {
+    // Log request info for debugging
+    console.log("Processing order request received");
+    
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -31,6 +34,7 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser()
 
     if (!user) {
+      console.log("Unauthorized request - no user found");
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -41,9 +45,25 @@ serve(async (req) => {
     }
 
     // Parse the request body
-    const { orderId } = await req.json()
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log("Request data:", requestData);
+    } catch (e) {
+      console.error("Failed to parse request body:", e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+
+    const { orderId } = requestData;
 
     if (!orderId) {
+      console.log("Missing order ID in request");
       return new Response(
         JSON.stringify({ error: 'Missing order ID' }),
         {
@@ -54,6 +74,7 @@ serve(async (req) => {
     }
 
     // Get the order details
+    console.log("Fetching order details for ID:", orderId);
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
       .select(`
@@ -64,6 +85,7 @@ serve(async (req) => {
       .single()
 
     if (orderError) {
+      console.error("Error fetching order:", orderError);
       return new Response(
         JSON.stringify({ error: 'Order not found', details: orderError }),
         {
@@ -75,6 +97,7 @@ serve(async (req) => {
 
     // Check if the order belongs to the authenticated user
     if (order.user_id !== user.id) {
+      console.log("Unauthorized access to order. Order user:", order.user_id, "Request user:", user.id);
       return new Response(
         JSON.stringify({ error: 'Unauthorized access to order' }),
         {
@@ -84,23 +107,39 @@ serve(async (req) => {
       )
     }
 
+    console.log("Order found, proceeding with payment processing");
+    
+    // Fetch shoe data from external API
+    try {
+      const shoeResponse = await fetch('https://api.sampleapis.com/shoes/sneakers');
+      const shoeData = await shoeResponse.json();
+      console.log("Retrieved shoe data from external API:", shoeData.length, "items");
+      
+      // We could do something with this data like store it or update inventory
+    } catch (apiError) {
+      console.error("Error fetching external shoe data:", apiError);
+      // Continue processing the order even if external API call fails
+    }
+
     // Example: Integrate with an external payment processing API
     // This is a mock implementation - you would replace this with an actual API call
-    const paymentResult = await processPayment(order)
+    const paymentResult = await processPayment(order);
 
     // Update order status based on payment result
     if (paymentResult.success) {
+      console.log("Payment processed successfully, updating order status");
       const { error: updateError } = await supabaseClient
         .from('orders')
         .update({ status: 'processing' })
         .eq('id', orderId)
 
       if (updateError) {
-        throw updateError
+        console.error("Error updating order status:", updateError);
+        throw updateError;
       }
 
       // Send a notification to the customer
-      await sendOrderConfirmation(order, user.email)
+      await sendOrderConfirmation(order, user.email);
 
       return new Response(
         JSON.stringify({
@@ -114,6 +153,7 @@ serve(async (req) => {
         }
       )
     } else {
+      console.log("Payment processing failed");
       return new Response(
         JSON.stringify({
           error: 'Payment processing failed',
@@ -126,7 +166,7 @@ serve(async (req) => {
       )
     }
   } catch (error) {
-    console.error('Error processing order:', error)
+    console.error('Error processing order:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       {
@@ -140,11 +180,17 @@ serve(async (req) => {
 // Mock function for payment processing
 async function processPayment(order: any) {
   // In a real implementation, you would integrate with a payment gateway API
-  // For demonstration, we'll simulate a successful payment
-  console.log('Processing payment for order:', order.id)
+  console.log('Processing payment for order:', order.id);
   
   // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Log the order details for debugging
+  console.log('Order details:', {
+    id: order.id,
+    total: order.total,
+    payment_method: order.payment_method
+  });
   
   return {
     success: true,
@@ -155,10 +201,10 @@ async function processPayment(order: any) {
 // Mock function for sending order confirmation
 async function sendOrderConfirmation(order: any, email: string) {
   // In a real implementation, you would integrate with an email service
-  console.log(`Sending order confirmation to ${email} for order ${order.id}`)
+  console.log(`Sending order confirmation to ${email} for order ${order.id}`);
   
   // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await new Promise(resolve => setTimeout(resolve, 500));
   
   return {
     success: true
