@@ -26,6 +26,25 @@ export const addCartItem = async (userId: string, productId: string, quantity: n
   });
 };
 
+// Define a type for the cart item returned by the RPC function
+interface CartItemRPC {
+  id: string;
+  user_id: string;
+  product_id: string;
+  quantity: number;
+  size: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const getCartWithProducts = async (userId: string) => {
-  return await supabase.rpc('get_cart_with_products', { user_id_param: userId });
+  const response = await supabase.rpc('get_cart_with_products', { user_id_param: userId });
+  
+  // Cast the response data to the appropriate type
+  if (response.data) {
+    response.data = response.data as CartItemRPC[];
+  }
+  
+  return response;
 };

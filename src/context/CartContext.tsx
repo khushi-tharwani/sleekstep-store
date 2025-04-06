@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { CartItem, Product, Order } from '@/types';
 import { useAuth } from './AuthContext';
@@ -335,6 +336,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw itemsError;
       }
 
+      // Clear the cart from both local storage and database
       clearCart();
       
       toast.success("Order placed successfully!");
