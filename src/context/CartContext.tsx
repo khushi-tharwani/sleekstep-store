@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { CartItem, Product, Order } from '@/types';
 import { useAuth } from './AuthContext';
@@ -45,35 +46,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setLoading(true);
     try {
-      // First, remove all existing cart items for this user
-      await supabase
-        .from('carts')
-        .delete()
-        .eq('user_id', user.id);
+      // First, fetch product data for each cart item
+      const productIds = updatedCart.map(item => item.productId);
+      
+      // Delete existing cart items
+      await supabase.rpc('delete_cart_items', { user_id_param: user.id });
       
       // Then insert the current cart items
       if (updatedCart.length > 0) {
-        const cartItems = updatedCart.map(item => ({
-          user_id: user.id,
-          product_id: item.productId,
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color
-        }));
-        
-        const { error } = await supabase
-          .from('carts')
-          .insert(cartItems);
-          
-        if (error) {
-          console.error('Error syncing cart with database:', error);
-          toast.error('Failed to sync your cart with the database');
-        } else {
-          console.log('Cart successfully synced with database');
+        // Insert items one by one to avoid type issues
+        for (const item of updatedCart) {
+          await supabase.rpc('add_cart_item', {
+            user_id_param: user.id,
+            product_id_param: item.productId,
+            quantity_param: item.quantity,
+            size_param: item.size,
+            color_param: item.color
+          });
         }
+        
+        console.log('Cart successfully synced with database');
       }
     } catch (error) {
       console.error('Error in syncCartWithDatabase:', error);
+      toast.error('Failed to sync your cart with the database');
     } finally {
       setLoading(false);
     }
@@ -91,29 +87,74 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setLoading(true);
       
-      // Try to load cart from database first
-      const { data: cartData, error: cartError } = await supabase
-        .from('carts')
-        .select(`
-          *,
-          products:product_id (*)
-        `)
-        .eq('user_id', user.id);
+      // Try to load cart items via RPC function
+      const { data: cartData, error: cartError } = await supabase.rpc('get_cart_with_products', {
+        user_id_param: user.id
+      });
         
       if (!cartError && cartData && cartData.length > 0) {
-        // Convert database format to CartItem format
-        const cartItems: CartItem[] = cartData.map(item => ({
-          id: nanoid(),
-          productId: item.product_id,
-          product: item.products as Product,
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color
-        }));
+        // Convert response to CartItem format
+        const cartItems: CartItem[] = await Promise.all(
+          cartData.map(async (item) => {
+            // Fetch the product details
+            const { data: productData } = await supabase
+              .from('products')
+              .select('*, product_sizes(*), product_colors(*)')
+              .eq('id', item.product_id)
+              .single();
+            
+            if (!productData) {
+              console.error(`Product not found for id: ${item.product_id}`);
+              return null;
+            }
+            
+            // Convert product data to our Product type
+            const product: Product = {
+              id: productData.id,
+              name: productData.name,
+              brand: productData.brand,
+              category: productData.category,
+              price: productData.price,
+              salePrice: productData.sale_price,
+              description: productData.description,
+              images: productData.images,
+              sizes: productData.product_sizes.map((size: any) => ({
+                id: size.id,
+                value: size.value,
+                available: size.available
+              })),
+              colors: productData.product_colors.map((color: any) => ({
+                id: color.id,
+                name: color.name,
+                value: color.value,
+                available: color.available
+              })),
+              stock: productData.stock,
+              rating: productData.rating,
+              reviews: [],
+              isFeatured: productData.is_featured,
+              isTrending: productData.is_trending,
+              createdAt: productData.created_at,
+              qrCode: productData.qr_code
+            };
+  
+            return {
+              id: nanoid(),
+              productId: item.product_id,
+              product,
+              quantity: item.quantity,
+              size: item.size,
+              color: item.color
+            };
+          })
+        );
         
-        setCart(cartItems);
+        // Filter out null items
+        const validCartItems = cartItems.filter(item => item !== null) as CartItem[];
+        
+        setCart(validCartItems);
         // Also update localStorage
-        localStorage.setItem(`cart_${user.id}`, JSON.stringify(cartItems));
+        localStorage.setItem(`cart_${user.id}`, JSON.stringify(validCartItems));
       } else {
         // Fall back to localStorage if database fetch fails or is empty
         const savedCart = localStorage.getItem(`cart_${user.id}`);
@@ -126,6 +167,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error in loadCart:', error);
+      toast.error('Failed to load your cart');
     } finally {
       setLoading(false);
     }
@@ -203,9 +245,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem(`cart_${user.id}`);
       // Also clear cart items from database
       supabase
-        .from('carts')
-        .delete()
-        .eq('user_id', user.id)
+        .rpc('delete_cart_items', { user_id_param: user.id })
         .then(({ error }) => {
           if (error) {
             console.error('Error clearing cart from database:', error);

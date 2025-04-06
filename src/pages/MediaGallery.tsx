@@ -1,94 +1,82 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import VideoPlayer from '@/components/multimedia/VideoPlayer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const MediaGallery: React.FC = () => {
+const MediaGallery = () => {
+  const [activeTab, setActiveTab] = useState<string>('videos');
+
+  const videos = [
+    {
+      id: '1',
+      title: 'Shoe Product Showcase',
+      description: 'Check out our newest collection of athletic shoes with premium features',
+      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      thumbnail: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
+      duration: '1:45'
+    },
+    {
+      id: '2',
+      title: 'Running Techniques',
+      description: 'Learn proper running techniques with our professional trainers',
+      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      thumbnail: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a',
+      duration: '2:30'
+    },
+    {
+      id: '3',
+      title: 'Shoe Maintenance Guide',
+      description: 'How to properly care for and maintain your athletic footwear',
+      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      thumbnail: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86',
+      duration: '3:15'
+    }
+  ];
+
   return (
     <Layout>
-      <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-6">Footwear Media Gallery</h1>
+      <div className="container mx-auto px-4 py-16">
+        <h1 className="text-3xl font-bold mb-8">Media Gallery</h1>
         
-        <div className="grid gap-8">
-          <Tabs defaultValue="videos" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-              <TabsTrigger value="videos">Product Videos</TabsTrigger>
-              <TabsTrigger value="presentations">Brand Story</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="videos">
-              <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                <VideoPlayer 
-                  src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                  title="SleekStep Summer Collection"
-                  poster="https://images.unsplash.com/photo-1549298916-b41d501d3772"
-                />
-                
-                <VideoPlayer 
-                  src="https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
-                  title="Running Shoes Technology"
-                  poster="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a"
-                />
-                
-                <VideoPlayer 
-                  src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-                  title="Lifestyle Footwear Showcase"
-                  poster="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa"
-                />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="presentations">
-              <div className="grid gap-8 grid-cols-1 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>SleekStep Origins</CardTitle>
-                    <CardDescription>The story behind our premium footwear brand</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <VideoPlayer 
-                      src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
-                      poster="https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb"
-                    />
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Eco-Friendly Manufacturing</CardTitle>
-                    <CardDescription>Our commitment to sustainable footwear production</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <VideoPlayer 
-                      src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
-                      poster="https://images.unsplash.com/photo-1606045604216-2ce9db8a3420"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+        <Tabs defaultValue="videos" onValueChange={setActiveTab} value={activeTab}>
+          <TabsList className="mb-8">
+            <TabsTrigger value="videos">Videos</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
+          </TabsList>
           
-          <section className="mt-12">
-            <h2 className="text-2xl font-bold mb-4">Master Craftsmanship</h2>
-            <div className="max-w-4xl mx-auto">
-              <VideoPlayer 
-                src="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
-                title="The Art of Shoemaking: From Design to Product"
-                poster="https://images.unsplash.com/photo-1591047139829-d91aecb6caea"
-                className="w-full"
-              />
-              
-              <div className="mt-4 prose dark:prose-invert max-w-none">
-                <h3>Premium Footwear Craftsmanship</h3>
-                <p>This documentary takes you behind the scenes of our manufacturing process, showing the careful craftsmanship that goes into every pair of SleekStep shoes we make. From the selection of premium materials to the skilled artisans who bring our designs to life, discover why our footwear stands the test of time.</p>
-                <p>Our commitment to quality begins with the materials we source globally, continues through our innovative design process, and culminates in the meticulous assembly by master craftspeople. Watch to learn more about the 200+ steps involved in creating a single pair of our signature shoes.</p>
+          <TabsContent value="videos">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {videos.map((video) => (
+                <div key={video.id} className="bg-dark-100 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="relative">
+                    <VideoPlayer 
+                      src={video.url} 
+                      poster={video.thumbnail}
+                      className="w-full aspect-video"
+                    />
+                    <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                      {video.duration}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
+                    <p className="text-gray-400 text-sm">{video.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="photos">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Photo gallery content here */}
+              <div className="text-center py-12">
+                <p>Photo gallery coming soon!</p>
               </div>
             </div>
-          </section>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
