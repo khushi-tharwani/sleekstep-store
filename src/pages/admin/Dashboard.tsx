@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -77,25 +76,49 @@ const AdminDashboard = () => {
         });
       }
 
-      // Fetch recent orders with user info
+      // Fetch recent orders
       const { data: recentOrdersData, error: ordersError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          profiles(name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (!ordersError && recentOrdersData) {
-        const formattedOrders = recentOrdersData.map(order => ({
-          id: order.id,
-          user_id: order.user_id,
-          total: order.total,
-          status: order.status,
-          created_at: order.created_at,
-          user_name: order.profiles?.name || 'Unknown User'
-        }));
+      if (ordersError) {
+        console.error("Error fetching recent orders:", ordersError);
+        toast.error("Failed to load recent orders");
+        return;
+      }
+
+      // If successfully fetched orders, get user names for each order
+      if (recentOrdersData) {
+        const formattedOrders = await Promise.all(
+          recentOrdersData.map(async (order) => {
+            let userName = 'Unknown User';
+            
+            if (order.user_id) {
+              // Fetch the user's name from profiles table
+              const { data: userData, error: userError } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', order.user_id)
+                .single();
+                
+              if (!userError && userData) {
+                userName = userData.name || 'Unknown User';
+              }
+            }
+            
+            return {
+              id: order.id,
+              user_id: order.user_id,
+              total: order.total,
+              status: order.status,
+              created_at: order.created_at,
+              user_name: userName
+            };
+          })
+        );
+        
         setRecentOrders(formattedOrders);
       }
 
