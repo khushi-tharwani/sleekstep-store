@@ -111,11 +111,30 @@ serve(async (req) => {
     
     // Fetch shoe data from external API
     try {
+      // Using the Shoe API to get product information and inventory data
       const shoeResponse = await fetch('https://api.sampleapis.com/shoes/sneakers');
+      
+      if (!shoeResponse.ok) {
+        throw new Error(`External API responded with status: ${shoeResponse.status}`);
+      }
+      
       const shoeData = await shoeResponse.json();
       console.log("Retrieved shoe data from external API:", shoeData.length, "items");
       
-      // We could do something with this data like store it or update inventory
+      // Process the external API data
+      // Here we could update inventory, validate prices, etc.
+      const externalProducts = shoeData.map((shoe: any) => ({
+        id: shoe.id,
+        name: shoe.name,
+        brand: shoe.brand || 'Unknown',
+        year: shoe.releaseDate || 'Unknown',
+        price: shoe.retailPrice || 0
+      }));
+      
+      console.log("Processed external product data:", externalProducts.slice(0, 3));
+      
+      // You could do something with this data like verify pricing or check stock
+      // For demonstration purposes, we're just logging it
     } catch (apiError) {
       console.error("Error fetching external shoe data:", apiError);
       // Continue processing the order even if external API call fails

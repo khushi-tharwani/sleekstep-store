@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Lock, CreditCard } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const CheckoutPage = () => {
-  const { cart, cartTotal, clearCart } = useCart();
+  const { cart, cartTotal, checkoutCart } = useCart();
   const { isAuthenticated, user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,25 +43,51 @@ const CheckoutPage = () => {
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      toast.error("Please log in to complete your purchase");
+      navigate("/login");
+      return;
+    }
+    
     setIsProcessing(true);
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const isSuccessful = true;
-    
-    if (isSuccessful) {
-      toast({
-        title: "Payment Successful!",
-        description: "Your order has been placed successfully.",
-      });
-      clearCart();
-      navigate("/payment-success");
-    } else {
-      toast({
-        title: "Payment Failed",
-        description: "There was an issue processing your payment. Please try again.",
-        variant: "destructive",
-      });
+    try {
+      // First create an address record
+      const { data: addressData, error: addressError } = await supabase
+        .from('addresses')
+        .insert({
+          user_id: user?.id,
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip_code: formData.zipCode,
+          country: formData.country,
+          is_default: true
+        })
+        .select('id')
+        .single();
+      
+      if (addressError) {
+        throw new Error(`Address creation failed: ${addressError.message}`);
+      }
+      
+      if (!addressData) {
+        throw new Error('Failed to create address');
+      }
+      
+      // Proceed with checkout using the new address
+      const success = await checkoutCart("Credit Card", addressData.id);
+      
+      if (success) {
+        navigate("/payment-success");
+      } else {
+        throw new Error('Checkout process failed');
+      }
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      toast.error("Checkout failed: " + (error as Error).message);
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -84,7 +110,7 @@ const CheckoutPage = () => {
         
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-2/3">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form id="checkout-form" onSubmit={handleSubmit} className="space-y-8">
               <div className="bg-dark-100 rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Shipping Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
