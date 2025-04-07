@@ -1,74 +1,30 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import VideoPlayer from '@/components/multimedia/VideoPlayer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { videoApiService, VideoData } from '@/utils/mediaApis';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const MediaGallery = () => {
   const [activeTab, setActiveTab] = useState<string>('videos');
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [openDialog, setOpenDialog] = useState(false);
 
-  const videos = [
-    {
-      id: '1',
-      title: 'SleekStep Pro Running Shoes Review',
-      description: 'Professional athlete reviewing our latest running shoe technology',
-      url: 'https://media.istockphoto.com/id/1339010122/video/male-basketball-players-preparing-for-training-or-game-warm-up-before-playing-basketball-man.mp4?s=mp4-640x640-is&k=20&c=qLx-hXjwP6SDyS-C7X5_q85c4aBTnUCEQWEYsrPcqho=',
-      thumbnail: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
-      duration: '1:45'
-    },
-    {
-      id: '2',
-      title: 'Marathon Training with SleekStep',
-      description: 'Training guide featuring our cushioned marathon running shoes',
-      url: 'https://media.istockphoto.com/id/1340274110/video/slow-motion-of-woman-tying-shoelaces-of-sneakers-before-morning-jogging.mp4?s=mp4-640x640-is&k=20&c=7UQcf9KQcO19mZp1A8aWUBPIE6vUvRDK4BQfPNnRNVs=',
-      thumbnail: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a',
-      duration: '2:30'
-    },
-    {
-      id: '3',
-      title: 'Shoe Care & Maintenance Guide',
-      description: 'How to properly care for and extend the life of your athletic footwear',
-      url: 'https://media.istockphoto.com/id/1351646215/video/handsome-caucasian-man-in-sneakers-sitting-on-bench-in-sports-stadium.mp4?s=mp4-640x640-is&k=20&c=eqonlV_GACX3VaXe9o9eUm6zlVNkf9-qnY9-LE9v9RM=',
-      thumbnail: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86',
-      duration: '3:15'
-    },
-    {
-      id: '4',
-      title: 'Sneaker Customization Workshop',
-      description: 'Learn how to customize your shoes with our design experts',
-      url: 'https://media.istockphoto.com/id/1289697507/video/wash-sports-shoes-clean-sneakers-wash-procedure-in-sportswoman-hands.mp4?s=mp4-640x640-is&k=20&c=Bs7ZZCqcG0xVJZZ1tbljWepRb1y9S6tOMWQsGWY9qkQ=',
-      thumbnail: 'https://images.unsplash.com/photo-1556906781-9a412961c28c',
-      duration: '4:20'
-    },
-    {
-      id: '5',
-      title: 'History of Sneaker Culture',
-      description: 'The evolution of athletic footwear and street fashion',
-      url: 'https://media.istockphoto.com/id/1291559301/video/mens-feet-wearing-sneakers-male-runner-get-ready-for-running-in-the-morning-athlete-tying.mp4?s=mp4-640x640-is&k=20&c=e_Q3oJvNkxaB-zSLWUKYVbEHXZx5Y2zzfzaNKL6YS_U=',
-      thumbnail: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa',
-      duration: '5:00'
-    },
-    {
-      id: '6',
-      title: 'Kids Sports Shoes Selection Guide',
-      description: 'How to choose the right athletic shoes for growing feet',
-      url: 'https://media.istockphoto.com/id/1341351356/video/little-girl-tying-her-shoelaces-on-a-white-background.mp4?s=mp4-640x640-is&k=20&c=zCqWYQ5GUr9SAwRkpI0xEZqLxVfDJxDn0f-c0OvKK4Y=',
-      thumbnail: 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2',
-      duration: '2:15'
-    },
-    {
-      id: '7',
-      title: 'Eco-Friendly Footwear Manufacturing',
-      description: 'Behind the scenes of our sustainable shoe production',
-      url: 'https://media.istockphoto.com/id/1220701660/video/woman-tying-her-shoelaces-on-jogging-boots-before-run-runner-gets-ready-for-training-close-up.mp4?s=mp4-640x640-is&k=20&c=HqVRjzcBSFaGcw91-FX0na9_I1DyWnW9jvODQRk6kMM=',
-      thumbnail: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519',
-      duration: '3:45'
+  const { data: videos = [], isLoading, error } = useQuery({
+    queryKey: ['videos'],
+    queryFn: () => videoApiService.getVideos(),
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load videos, please try again later');
+      console.error('Video loading error:', error);
     }
-  ];
+  }, [error]);
 
   const handleVideoClick = (video: any) => {
     setSelectedVideo(video);
@@ -90,33 +46,43 @@ const MediaGallery = () => {
           </TabsList>
           
           <TabsContent value="videos">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {videos.map((video) => (
-                <div 
-                  key={video.id} 
-                  className="bg-dark-100 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer" 
-                  onClick={() => handleVideoClick(video)}
-                >
-                  <div className="relative">
-                    <img 
-                      src={video.thumbnail} 
-                      alt={video.title} 
-                      className="w-full aspect-video object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors">
-                      <Play className="h-12 w-12 text-white opacity-80" />
+            {isLoading ? (
+              <div className="flex justify-center p-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : videos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {videos.map((video) => (
+                  <div 
+                    key={video.id} 
+                    className="bg-dark-100 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer" 
+                    onClick={() => handleVideoClick(video)}
+                  >
+                    <div className="relative">
+                      <img 
+                        src={video.thumbnail} 
+                        alt={video.title} 
+                        className="w-full aspect-video object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors">
+                        <Play className="h-12 w-12 text-white opacity-80" />
+                      </div>
+                      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        {video.duration}
+                      </div>
                     </div>
-                    <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                      {video.duration}
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
+                      <p className="text-gray-400 text-sm">{video.description}</p>
                     </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
-                    <p className="text-gray-400 text-sm">{video.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p>No videos found</p>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="photos">
@@ -162,7 +128,7 @@ const MediaGallery = () => {
 };
 
 const NearbyStoresMap = () => {
-  // Updated to use Chembur, Mumbai coordinates
+  // Chembur, Mumbai coordinates
   const userLocation = {
     name: "Chembur, Mumbai",
     coordinates: { lat: 19.0522, lng: 72.9005 }
@@ -244,27 +210,31 @@ const NearbyStoresMap = () => {
       
       <div className="mt-8 p-6 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <div className="text-center mb-4">
-          <h3 className="text-lg font-medium mb-2">Store Locations in Chembur</h3>
-          <p className="text-sm text-gray-500">Interactive map of store locations</p>
+          <h3 className="text-lg font-medium mb-2">Store Locations in Mumbai</h3>
+          <p className="text-sm text-gray-500">Map of Mumbai store locations</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-2 rounded">
-          <div className="aspect-[16/9] bg-blue-100 dark:bg-blue-900/20 rounded relative">
-            {/* Interactive map representation with Chembur's marker position */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse" title="Your location"></div>
-            </div>
+          <div className="aspect-[16/9] rounded relative overflow-hidden">
+            <img 
+              src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l+3498db(72.9005,19.0522)/72.9005,19.0522,12,0/800x450?access_token=pk.eyJ1IjoibG92YWJsZXByb2plY3QiLCJhIjoiY2x3bzlpZHg2MDBpcjJrcXNjb25iaWpxcCJ9.A8W9pTSuWIJjMbN-K9XT9w" 
+              alt="Map of Mumbai showing store locations"
+              className="w-full h-full object-cover"
+            />
+            {/* Store markers */}
             {stores.map((store) => (
               <div 
                 key={store.id}
-                className="absolute w-3 h-3 bg-primary rounded-full"
+                className="absolute w-3 h-3 bg-primary rounded-full cursor-pointer"
                 style={{ 
-                  left: `${(((store.coordinates.lng - userLocation.coordinates.lng) / 0.05) * 10) + 50}%`, 
-                  top: `${(((store.coordinates.lat - userLocation.coordinates.lat) / 0.05) * 10) + 50}%` 
+                  left: `${((store.coordinates.lng - 72.88) / 0.08) * 100}%`, 
+                  top: `${100 - ((store.coordinates.lat - 19.02) / 0.08) * 100}%`,
+                  transform: 'translate(-50%, -50%)'
                 }}
+                title={store.name}
               >
-                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-black/70 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
                   {store.name}
-                </span>
+                </div>
               </div>
             ))}
           </div>

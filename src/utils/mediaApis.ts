@@ -12,6 +12,7 @@ export interface VideoData {
   likes: string;
   comments: string;
   publishedAt: string;
+  url: string; // Added URL property for videos
 }
 
 export interface ShoeRecommendation {
@@ -51,7 +52,8 @@ export const videoApiService = {
         views: formatNumber(item.statistics.viewCount),
         likes: formatNumber(item.statistics.likeCount),
         comments: formatNumber(item.statistics.commentCount),
-        publishedAt: formatDate(item.snippet.publishedAt)
+        publishedAt: formatDate(item.snippet.publishedAt),
+        url: item.url // Use the URL from the response
       }));
       
     } catch (error) {
@@ -83,7 +85,8 @@ export const videoApiService = {
         views: formatNumber(item.statistics.viewCount),
         likes: formatNumber(item.statistics.likeCount),
         comments: formatNumber(item.statistics.commentCount),
-        publishedAt: formatDate(item.snippet.publishedAt)
+        publishedAt: formatDate(item.snippet.publishedAt),
+        url: item.url // Use the URL from the response
       };
       
     } catch (error) {

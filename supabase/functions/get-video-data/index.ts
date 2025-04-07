@@ -34,7 +34,7 @@ interface YoutubeVideoResponse {
   }[];
 }
 
-// For this example, we'll use a mock implementation since we don't want to require API keys
+// For this example, we'll use a mock implementation
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -162,6 +162,22 @@ serve(async (req) => {
         },
       },
     ];
+    
+    // Add real playable video URLs to each video
+    const videoUrls = [
+      "https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-seashore-with-rocks-1090-large.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-runner-tying-the-laces-of-his-shoes-4831-large.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-jogger-stretching-before-exercise-on-a-forest-road-4808-large.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-young-man-tying-shoelaces-before-jogging-4825-large.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-young-woman-exercising-and-stretching-her-legs-34882-large.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-man-exercising-in-a-park-4830-large.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-slow-motion-on-a-track-32809-large.mp4"
+    ];
+    
+    // Assign real URLs to each video
+    mockVideos.forEach((video, index) => {
+      video.url = videoUrls[index % videoUrls.length];
+    });
     
     // If a specific video ID was requested, return just that video
     if (videoId) {
