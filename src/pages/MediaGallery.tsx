@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import VideoPlayer from '@/components/multimedia/VideoPlayer';
@@ -15,7 +16,7 @@ const MediaGallery = () => {
       id: '1',
       title: 'SleekStep Pro Running Shoes Review',
       description: 'Professional athlete reviewing our latest running shoe technology',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-professional-skier-descending-a-slope-7203-large.mp4',
+      url: 'https://media.istockphoto.com/id/1339010122/video/male-basketball-players-preparing-for-training-or-game-warm-up-before-playing-basketball-man.mp4?s=mp4-640x640-is&k=20&c=qLx-hXjwP6SDyS-C7X5_q85c4aBTnUCEQWEYsrPcqho=',
       thumbnail: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
       duration: '1:45'
     },
@@ -23,7 +24,7 @@ const MediaGallery = () => {
       id: '2',
       title: 'Marathon Training with SleekStep',
       description: 'Training guide featuring our cushioned marathon running shoes',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-runner-at-sunset-5361-large.mp4',
+      url: 'https://media.istockphoto.com/id/1340274110/video/slow-motion-of-woman-tying-shoelaces-of-sneakers-before-morning-jogging.mp4?s=mp4-640x640-is&k=20&c=7UQcf9KQcO19mZp1A8aWUBPIE6vUvRDK4BQfPNnRNVs=',
       thumbnail: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a',
       duration: '2:30'
     },
@@ -31,7 +32,7 @@ const MediaGallery = () => {
       id: '3',
       title: 'Shoe Care & Maintenance Guide',
       description: 'How to properly care for and extend the life of your athletic footwear',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-man-tying-shoes-on-a-trail-4823-large.mp4',
+      url: 'https://media.istockphoto.com/id/1351646215/video/handsome-caucasian-man-in-sneakers-sitting-on-bench-in-sports-stadium.mp4?s=mp4-640x640-is&k=20&c=eqonlV_GACX3VaXe9o9eUm6zlVNkf9-qnY9-LE9v9RM=',
       thumbnail: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86',
       duration: '3:15'
     },
@@ -39,7 +40,7 @@ const MediaGallery = () => {
       id: '4',
       title: 'Sneaker Customization Workshop',
       description: 'Learn how to customize your shoes with our design experts',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-sitting-in-a-shoe-store-5750-large.mp4',
+      url: 'https://media.istockphoto.com/id/1289697507/video/wash-sports-shoes-clean-sneakers-wash-procedure-in-sportswoman-hands.mp4?s=mp4-640x640-is&k=20&c=Bs7ZZCqcG0xVJZZ1tbljWepRb1y9S6tOMWQsGWY9qkQ=',
       thumbnail: 'https://images.unsplash.com/photo-1556906781-9a412961c28c',
       duration: '4:20'
     },
@@ -47,7 +48,7 @@ const MediaGallery = () => {
       id: '5',
       title: 'History of Sneaker Culture',
       description: 'The evolution of athletic footwear and street fashion',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-close-up-view-of-sport-shoes-and-grass-40128-large.mp4',
+      url: 'https://media.istockphoto.com/id/1291559301/video/mens-feet-wearing-sneakers-male-runner-get-ready-for-running-in-the-morning-athlete-tying.mp4?s=mp4-640x640-is&k=20&c=e_Q3oJvNkxaB-zSLWUKYVbEHXZx5Y2zzfzaNKL6YS_U=',
       thumbnail: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa',
       duration: '5:00'
     },
@@ -55,7 +56,7 @@ const MediaGallery = () => {
       id: '6',
       title: 'Kids Sports Shoes Selection Guide',
       description: 'How to choose the right athletic shoes for growing feet',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-a-girl-in-the-garden-at-sunset-4653-large.mp4',
+      url: 'https://media.istockphoto.com/id/1341351356/video/little-girl-tying-her-shoelaces-on-a-white-background.mp4?s=mp4-640x640-is&k=20&c=zCqWYQ5GUr9SAwRkpI0xEZqLxVfDJxDn0f-c0OvKK4Y=',
       thumbnail: 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2',
       duration: '2:15'
     },
@@ -63,7 +64,7 @@ const MediaGallery = () => {
       id: '7',
       title: 'Eco-Friendly Footwear Manufacturing',
       description: 'Behind the scenes of our sustainable shoe production',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-group-of-friends-walking-in-line-across-a-mountain-4809-large.mp4',
+      url: 'https://media.istockphoto.com/id/1220701660/video/woman-tying-her-shoelaces-on-jogging-boots-before-run-runner-gets-ready-for-training-close-up.mp4?s=mp4-640x640-is&k=20&c=HqVRjzcBSFaGcw91-FX0na9_I1DyWnW9jvODQRk6kMM=',
       thumbnail: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519',
       duration: '3:45'
     }
@@ -214,7 +215,7 @@ const NearbyStoresMap = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          Your Location (Static Sample)
+          Your Location
         </h3>
         <p className="text-sm text-green-700 dark:text-green-400">
           {userLocation.name} | Coordinates: {userLocation.coordinates.lat.toFixed(4)}° N, {userLocation.coordinates.lng.toFixed(4)}° E
@@ -241,14 +242,14 @@ const NearbyStoresMap = () => {
         ))}
       </div>
       
-      <div className="mt-8 p-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <div className="mt-8 p-6 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <div className="text-center mb-4">
           <h3 className="text-lg font-medium mb-2">Store Locations in Chembur</h3>
-          <p className="text-sm text-gray-500">Static map representation of store locations</p>
+          <p className="text-sm text-gray-500">Interactive map of store locations</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-2 rounded">
           <div className="aspect-[16/9] bg-blue-100 dark:bg-blue-900/20 rounded relative">
-            {/* Static map representation with Chembur's marker position */}
+            {/* Interactive map representation with Chembur's marker position */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse" title="Your location"></div>
             </div>

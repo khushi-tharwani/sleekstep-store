@@ -48,21 +48,21 @@ serve(async (req) => {
     console.log("Received request:", { query, videoId });
     
     // In a real implementation, we would call the YouTube API here
-    // For this example, we'll return mock data
+    // For this example, we'll return mock data with real video URLs
     
     const mockVideos = [
       {
         id: "video1",
         snippet: {
-          title: "How to Choose the Perfect Running Shoes",
-          description: "Professional runners share their tips on selecting the right running shoes for your foot type and training needs.",
+          title: "Professional Running Shoes Review",
+          description: "Professional athletes test and review our latest high-performance running shoes with advanced cushioning technology.",
           publishedAt: "2023-01-15T12:00:00Z",
           thumbnails: {
             default: { url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff", width: 120, height: 90 },
             medium: { url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff", width: 320, height: 180 },
             high: { url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff", width: 480, height: 360 },
           },
-          channelTitle: "RunnersPro",
+          channelTitle: "SleekStep Official",
         },
         contentDetails: {
           duration: "PT15M33S",
@@ -76,7 +76,7 @@ serve(async (req) => {
       {
         id: "video2",
         snippet: {
-          title: "Marathon Training with SleekStep Cushioned Shoes",
+          title: "Marathon Training with Premium Cushioned Shoes",
           description: "Professional marathon runner demonstrates proper training techniques using our specialized cushioned running shoes.",
           publishedAt: "2023-02-23T14:30:00Z",
           thumbnails: {
@@ -84,7 +84,7 @@ serve(async (req) => {
             medium: { url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a", width: 320, height: 180 },
             high: { url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a", width: 480, height: 360 },
           },
-          channelTitle: "SleekStep Official",
+          channelTitle: "SleekStep Pro Training",
         },
         contentDetails: {
           duration: "PT18M45S",
