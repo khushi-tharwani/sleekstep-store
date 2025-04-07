@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import VideoPlayer from '@/components/multimedia/VideoPlayer';
@@ -16,7 +15,7 @@ const MediaGallery = () => {
       id: '1',
       title: 'SleekStep Pro Running Shoes Review',
       description: 'Professional athlete reviewing our latest running shoe technology',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-professional-skier-descending-a-slope-7203-large.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
       duration: '1:45'
     },
@@ -24,7 +23,7 @@ const MediaGallery = () => {
       id: '2',
       title: 'Marathon Training with SleekStep',
       description: 'Training guide featuring our cushioned marathon running shoes',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-runner-at-sunset-5361-large.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a',
       duration: '2:30'
     },
@@ -32,7 +31,7 @@ const MediaGallery = () => {
       id: '3',
       title: 'Shoe Care & Maintenance Guide',
       description: 'How to properly care for and extend the life of your athletic footwear',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-man-tying-shoes-on-a-trail-4823-large.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86',
       duration: '3:15'
     },
@@ -40,7 +39,7 @@ const MediaGallery = () => {
       id: '4',
       title: 'Sneaker Customization Workshop',
       description: 'Learn how to customize your shoes with our design experts',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-sitting-in-a-shoe-store-5750-large.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1556906781-9a412961c28c',
       duration: '4:20'
     },
@@ -48,7 +47,7 @@ const MediaGallery = () => {
       id: '5',
       title: 'History of Sneaker Culture',
       description: 'The evolution of athletic footwear and street fashion',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-close-up-view-of-sport-shoes-and-grass-40128-large.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa',
       duration: '5:00'
     },
@@ -56,7 +55,7 @@ const MediaGallery = () => {
       id: '6',
       title: 'Kids Sports Shoes Selection Guide',
       description: 'How to choose the right athletic shoes for growing feet',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-a-girl-in-the-garden-at-sunset-4653-large.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2',
       duration: '2:15'
     },
@@ -64,7 +63,7 @@ const MediaGallery = () => {
       id: '7',
       title: 'Eco-Friendly Footwear Manufacturing',
       description: 'Behind the scenes of our sustainable shoe production',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-group-of-friends-walking-in-line-across-a-mountain-4809-large.mp4',
       thumbnail: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519',
       duration: '3:45'
     }

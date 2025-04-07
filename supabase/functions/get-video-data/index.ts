@@ -76,18 +76,18 @@ serve(async (req) => {
       {
         id: "video2",
         snippet: {
-          title: "Sneaker Cleaning Tutorial - Keep Your Shoes Looking New",
-          description: "Learn how to properly clean and maintain different types of athletic shoes to extend their lifespan.",
+          title: "Marathon Training with SleekStep Cushioned Shoes",
+          description: "Professional marathon runner demonstrates proper training techniques using our specialized cushioned running shoes.",
           publishedAt: "2023-02-23T14:30:00Z",
           thumbnails: {
             default: { url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a", width: 120, height: 90 },
             medium: { url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a", width: 320, height: 180 },
             high: { url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a", width: 480, height: 360 },
           },
-          channelTitle: "SneakerCare",
+          channelTitle: "SleekStep Official",
         },
         contentDetails: {
-          duration: "PT8M12S",
+          duration: "PT18M45S",
         },
         statistics: {
           viewCount: "178934",
@@ -98,23 +98,67 @@ serve(async (req) => {
       {
         id: "video3",
         snippet: {
-          title: "The History of Athletic Footwear - From Canvas to High Tech",
-          description: "Explore the fascinating evolution of sports shoes from simple canvas designs to modern technological marvels.",
+          title: "Trail Running Shoe Technology Explained",
+          description: "Our head designer explains the technology behind our trail running shoes and how they provide superior grip and stability.",
           publishedAt: "2022-11-05T09:45:00Z",
           thumbnails: {
             default: { url: "https://images.unsplash.com/photo-1560769629-975ec94e6a86", width: 120, height: 90 },
             medium: { url: "https://images.unsplash.com/photo-1560769629-975ec94e6a86", width: 320, height: 180 },
             high: { url: "https://images.unsplash.com/photo-1560769629-975ec94e6a86", width: 480, height: 360 },
           },
-          channelTitle: "SneakerHistory",
+          channelTitle: "SleekStep Tech",
         },
         contentDetails: {
-          duration: "PT22M47S",
+          duration: "PT12M37S",
         },
         statistics: {
           viewCount: "325678",
           likeCount: "28976",
           commentCount: "2345",
+        },
+      },
+      {
+        id: "video4",
+        snippet: {
+          title: "Cleaning and Maintaining Your Athletic Shoes",
+          description: "Expert techniques for cleaning different types of athletic footwear to extend their lifespan and performance.",
+          publishedAt: "2022-09-12T15:30:00Z",
+          thumbnails: {
+            default: { url: "https://images.unsplash.com/photo-1556906781-9a412961c28c", width: 120, height: 90 },
+            medium: { url: "https://images.unsplash.com/photo-1556906781-9a412961c28c", width: 320, height: 180 },
+            high: { url: "https://images.unsplash.com/photo-1556906781-9a412961c28c", width: 480, height: 360 },
+          },
+          channelTitle: "Shoe Care Experts",
+        },
+        contentDetails: {
+          duration: "PT8M53S",
+        },
+        statistics: {
+          viewCount: "198765",
+          likeCount: "15432",
+          commentCount: "987",
+        },
+      },
+      {
+        id: "video5",
+        snippet: {
+          title: "SleekStep Pro - Behind the Design",
+          description: "Go behind the scenes with our design team as they share the inspiration and technology behind our flagship SleekStep Pro model.",
+          publishedAt: "2023-03-28T10:15:00Z",
+          thumbnails: {
+            default: { url: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa", width: 120, height: 90 },
+            medium: { url: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa", width: 320, height: 180 },
+            high: { url: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa", width: 480, height: 360 },
+          },
+          channelTitle: "SleekStep Design",
+        },
+        contentDetails: {
+          duration: "PT14M22S",
+        },
+        statistics: {
+          viewCount: "287654",
+          likeCount: "19876",
+          commentCount: "1543",
         },
       },
     ];
