@@ -1,1 +1,19 @@
+
 project_id = "yuktbdmlvuxwcmqpcsyk"
+
+[api]
+# API URL: https://yuktbdmlvuxwcmqpcsyk.supabase.co
+
+[api.cors]
+enabled = true
+allowed_origins = ["*"]
+allowed_methods = ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
+allowed_headers = ["Authorization", "Content-Type", "apikey", "x-client-info"]
+exposed_headers = []
+max_age = 3600
+
+[functions.get-video-data]
+verify_jwt = false
+
+[functions.get-shoe-recommendations]
+verify_jwt = false
