@@ -84,7 +84,7 @@ const MediaGallery = () => {
           <TabsList className="mb-8">
             <TabsTrigger value="videos">Videos</TabsTrigger>
             <TabsTrigger value="photos">Photos</TabsTrigger>
-            <TabsTrigger value="stores" onClick={() => console.log("Nearby Stores tab clicked")}>
+            <TabsTrigger value="stores">
               Nearby Stores
             </TabsTrigger>
           </TabsList>
@@ -162,42 +162,48 @@ const MediaGallery = () => {
 };
 
 const NearbyStoresMap = () => {
+  // Updated to use Chembur, Mumbai coordinates
+  const userLocation = {
+    name: "Chembur, Mumbai",
+    coordinates: { lat: 19.0522, lng: 72.9005 }
+  };
+  
   const stores = [
     {
       id: 1,
-      name: "SleekStep Flagship Store",
-      address: "123 Fashion Ave, New York, NY 10001",
-      coordinates: { lat: 40.7128, lng: -74.0060 },
-      hours: "9:00 AM - 9:00 PM",
-      phone: "(212) 555-1234",
-      distance: "0.5 miles"
+      name: "SleekStep Chembur Mall",
+      address: "123 RC Marg, Chembur East, Mumbai 400071",
+      coordinates: { lat: 19.0555, lng: 72.9035 },
+      hours: "10:00 AM - 9:00 PM",
+      phone: "(022) 5551-1234",
+      distance: "0.5 km"
     },
     {
       id: 2,
-      name: "SleekStep Outlet",
-      address: "456 Discount Blvd, Brooklyn, NY 11201",
-      coordinates: { lat: 40.6782, lng: -73.9442 },
-      hours: "10:00 AM - 8:00 PM",
-      phone: "(718) 555-5678",
-      distance: "1.8 miles"
+      name: "SleekStep Sports Hub",
+      address: "456 Sion-Trombay Road, Chembur West, Mumbai 400071",
+      coordinates: { lat: 19.0480, lng: 72.8950 },
+      hours: "9:30 AM - 8:30 PM",
+      phone: "(022) 5552-5678",
+      distance: "1.2 km"
     },
     {
       id: 3,
-      name: "SleekStep Sport Center",
-      address: "789 Athletic St, Queens, NY 11101",
-      coordinates: { lat: 40.7442, lng: -73.9489 },
-      hours: "8:00 AM - 10:00 PM",
-      phone: "(347) 555-9012",
-      distance: "2.3 miles"
+      name: "SleekStep Premium Store",
+      address: "789 Diamond Garden, Chembur, Mumbai 400074",
+      coordinates: { lat: 19.0610, lng: 72.9050 },
+      hours: "11:00 AM - 10:00 PM",
+      phone: "(022) 5553-9012",
+      distance: "1.8 km"
     },
     {
       id: 4,
-      name: "SleekStep Premium Collection",
-      address: "321 Luxury Lane, Manhattan, NY 10022",
-      coordinates: { lat: 40.7580, lng: -73.9855 },
-      hours: "11:00 AM - 7:00 PM",
-      phone: "(212) 555-3456",
-      distance: "3.5 miles"
+      name: "SleekStep Factory Outlet",
+      address: "321 Ghatkopar West, Mumbai 400086",
+      coordinates: { lat: 19.0790, lng: 72.9120 },
+      hours: "10:00 AM - 7:00 PM",
+      phone: "(022) 5554-3456",
+      distance: "3.1 km"
     },
   ];
   
@@ -212,7 +218,7 @@ const NearbyStoresMap = () => {
           Your Location (Static Sample)
         </h3>
         <p className="text-sm text-green-700 dark:text-green-400">
-          New York City, NY | Coordinates: 40.7128° N, 74.0060° W
+          {userLocation.name} | Coordinates: {userLocation.coordinates.lat.toFixed(4)}° N, {userLocation.coordinates.lng.toFixed(4)}° E
         </p>
       </div>
       
@@ -238,22 +244,22 @@ const NearbyStoresMap = () => {
       
       <div className="mt-8 p-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <div className="text-center mb-4">
-          <h3 className="text-lg font-medium mb-2">Store Locations</h3>
+          <h3 className="text-lg font-medium mb-2">Store Locations in Chembur</h3>
           <p className="text-sm text-gray-500">Static map representation of store locations</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-2 rounded">
           <div className="aspect-[16/9] bg-blue-100 dark:bg-blue-900/20 rounded relative">
-            {/* Static map representation */}
+            {/* Static map representation with Chembur's marker position */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse" title="Your location"></div>
             </div>
             {stores.map((store) => (
               <div 
                 key={store.id}
                 className="absolute w-3 h-3 bg-primary rounded-full"
                 style={{ 
-                  left: `${(((store.coordinates.lng + 74.0060) / 0.1) * 5) + 40}%`, 
-                  top: `${(((store.coordinates.lat - 40.7128) / 0.1) * 10) + 50}%` 
+                  left: `${(((store.coordinates.lng - userLocation.coordinates.lng) / 0.05) * 10) + 50}%`, 
+                  top: `${(((store.coordinates.lat - userLocation.coordinates.lat) / 0.05) * 10) + 50}%` 
                 }}
               >
                 <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
