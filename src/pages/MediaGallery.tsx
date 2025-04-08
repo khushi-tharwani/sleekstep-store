@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import VideoPlayer from '@/components/multimedia/VideoPlayer';
@@ -5,23 +6,21 @@ import ShakeDetector from '@/components/multimedia/ShakeDetector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play, FileText, Calendar, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { videoApiService, VideoData } from '@/utils/mediaApis';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { getReliableVideos } from '@/components/multimedia/utils/videoUtils';
 
 const MediaGallery = () => {
   const [activeTab, setActiveTab] = useState<string>('videos');
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [newsTopic, setNewsTopic] = useState('sports');
-
-  const { data: videos = [], isLoading, error } = useQuery({
-    queryKey: ['videos'],
-    queryFn: () => videoApiService.getVideos(),
-  });
+  
+  // Use our reliable videos instead of the API
+  const videos = getReliableVideos();
 
   const { data: newsData = { articles: [] }, isLoading: isNewsLoading } = useQuery({
     queryKey: ['news', newsTopic],
@@ -42,13 +41,6 @@ const MediaGallery = () => {
     enabled: activeTab === 'news'
   });
 
-  useEffect(() => {
-    if (error) {
-      toast.error('Failed to load videos, please try again later');
-      console.error('Video loading error:', error);
-    }
-  }, [error]);
-
   const handleVideoClick = (video: any) => {
     setSelectedVideo(video);
     setOpenDialog(true);
@@ -66,7 +58,7 @@ const MediaGallery = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-8">Media Gallery</h1>
         
         <Tabs defaultValue="videos" onValueChange={setActiveTab} value={activeTab}>
@@ -81,11 +73,7 @@ const MediaGallery = () => {
           
           <TabsContent value="videos">
             <ShakeDetector onShake={handleShake}>
-              {isLoading ? (
-                <div className="flex justify-center p-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                </div>
-              ) : videos.length > 0 ? (
+              {videos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {videos.map((video) => (
                     <div 
@@ -325,7 +313,6 @@ const NearbyStoresMap = () => {
               alt="Map of Mumbai showing store locations"
               className="w-full h-full object-cover"
             />
-            {/* Store markers are shown in the map image itself with pins */}
           </div>
         </div>
       </div>

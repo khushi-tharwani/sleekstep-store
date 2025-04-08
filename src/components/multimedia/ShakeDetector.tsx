@@ -139,42 +139,39 @@ const ShakeDetector: React.FC<ShakeDetectorProps> = ({
       </div>
       
       {isDetecting && (
-        <div className="my-4 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+        <div className="my-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Shake Intensity</span>
-            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
               {shakeIntensity}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div 
-              className="bg-primary h-2.5 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${shakeIntensity}%` }}
             ></div>
           </div>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Shake your device harder to find more videos quickly! This works best on mobile devices.
-          </p>
         </div>
       )}
       
-      <div className="mt-4">
+      <div className="mt-3 text-center">
         <button
           onClick={toggleDetection}
-          className={`w-full py-3 px-4 rounded-md flex justify-center items-center gap-2 transition-colors ${
+          className={`py-2 px-4 rounded-md inline-flex justify-center items-center gap-2 transition-colors text-sm ${
             isDetecting 
               ? "bg-red-500 hover:bg-red-600 text-white" 
               : "bg-primary hover:bg-primary/90 text-white"
           }`}
         >
-          <Smartphone className="h-5 w-5" />
-          {isDetecting ? "Disable Shake Detection" : "Enable Shake Detection"}
+          <Smartphone className="h-4 w-4" />
+          {isDetecting ? "Disable Shake" : "Enable Shake Detection"}
         </button>
       </div>
       
       {permissionStatus === 'unsupported' && (
-        <div className="mt-2 text-center text-amber-500 text-sm">
-          Your device or browser may not support motion detection
+        <div className="mt-1 text-center text-amber-500 text-xs">
+          Your device may not support motion detection
         </div>
       )}
     </div>

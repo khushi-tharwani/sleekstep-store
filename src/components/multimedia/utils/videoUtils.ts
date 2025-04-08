@@ -54,43 +54,57 @@ export const secondsToReadableDuration = (totalSeconds: number): string => {
 };
 
 /**
- * Extract video ID from various YouTube URL formats
+ * List of reliable video sources for the app
  */
-export const extractYoutubeVideoId = (url: string): string | null => {
-  if (!url) return null;
-  
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  
-  return (match && match[2].length === 11) ? match[2] : null;
-};
-
-/**
- * Check if a video URL is valid and accessible
- */
-export const isVideoUrlValid = (url: string): boolean => {
-  if (!url) return false;
-  
-  // Check for common video file extensions
-  const validExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
-  const hasValidExtension = validExtensions.some(ext => url.toLowerCase().includes(ext));
-  
-  // Check for common video hosting domains
-  const validHosts = ['mixkit.co', 'assets.mixkit.co', 'videos.pexels.com', 'player.vimeo.com'];
-  const hasValidHost = validHosts.some(host => url.toLowerCase().includes(host));
-  
-  return hasValidExtension || hasValidHost;
-};
-
-/**
- * Get a fallback video URL if the main one fails
- */
-export const getFallbackVideoUrl = (): string => {
-  const fallbackUrls = [
-    'https://assets.mixkit.co/videos/preview/mixkit-runner-tying-the-laces-of-his-shoes-4831-large.mp4',
-    'https://assets.mixkit.co/videos/preview/mixkit-young-man-tying-shoelaces-before-jogging-4825-large.mp4',
-    'https://assets.mixkit.co/videos/preview/mixkit-jogger-stretching-before-exercise-on-a-forest-road-4808-large.mp4'
+export const getReliableVideos = () => {
+  return [
+    {
+      id: "1",
+      title: "Running Shoes Close-up",
+      description: "A detailed close-up of running shoes, showing the quality craftsmanship and materials.",
+      url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      thumbnail: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+      duration: "0:49"
+    },
+    {
+      id: "2",
+      title: "Morning Jog in the Park",
+      description: "Experience the serenity of a morning jog through a beautiful park setting.",
+      url: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      thumbnail: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+      duration: "9:56"
+    },
+    {
+      id: "3",
+      title: "Product Feature Overview",
+      description: "Learn about the innovative features that make our products stand out from the competition.",
+      url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      thumbnail: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+      duration: "10:53"
+    },
+    {
+      id: "4",
+      title: "Training Session Highlights",
+      description: "Watch highlights from our professional training sessions and get inspired for your next workout.",
+      url: "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+      thumbnail: "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+      duration: "12:14"
+    },
+    {
+      id: "5",
+      title: "Customer Testimonials",
+      description: "Hear what our satisfied customers have to say about their experiences with our products.",
+      url: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+      thumbnail: "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+      duration: "10:00"
+    },
+    {
+      id: "6",
+      title: "Behind the Scenes",
+      description: "Get an exclusive look behind the scenes at our design and manufacturing process.",
+      url: "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+      thumbnail: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+      duration: "0:59"
+    }
   ];
-  
-  return fallbackUrls[Math.floor(Math.random() * fallbackUrls.length)];
 };
