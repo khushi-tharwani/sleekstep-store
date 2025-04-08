@@ -64,3 +64,33 @@ export const extractYoutubeVideoId = (url: string): string | null => {
   
   return (match && match[2].length === 11) ? match[2] : null;
 };
+
+/**
+ * Check if a video URL is valid and accessible
+ */
+export const isVideoUrlValid = (url: string): boolean => {
+  if (!url) return false;
+  
+  // Check for common video file extensions
+  const validExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+  const hasValidExtension = validExtensions.some(ext => url.toLowerCase().includes(ext));
+  
+  // Check for common video hosting domains
+  const validHosts = ['mixkit.co', 'assets.mixkit.co', 'videos.pexels.com', 'player.vimeo.com'];
+  const hasValidHost = validHosts.some(host => url.toLowerCase().includes(host));
+  
+  return hasValidExtension || hasValidHost;
+};
+
+/**
+ * Get a fallback video URL if the main one fails
+ */
+export const getFallbackVideoUrl = (): string => {
+  const fallbackUrls = [
+    'https://assets.mixkit.co/videos/preview/mixkit-runner-tying-the-laces-of-his-shoes-4831-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-young-man-tying-shoelaces-before-jogging-4825-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-jogger-stretching-before-exercise-on-a-forest-road-4808-large.mp4'
+  ];
+  
+  return fallbackUrls[Math.floor(Math.random() * fallbackUrls.length)];
+};

@@ -170,6 +170,10 @@ serve(async (req) => {
       },
     ];
     
+    // Test video URLs to ensure they load properly
+    console.log("Video URLs to serve:");
+    mockVideos.forEach(video => console.log(`ID: ${video.id}, URL: ${video.url}`));
+    
     // If a specific video ID was requested, return just that video
     if (videoId) {
       const video = mockVideos.find(v => v.id === videoId) || mockVideos[0];

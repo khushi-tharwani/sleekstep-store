@@ -1,23 +1,45 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import VideoPlayer from '@/components/multimedia/VideoPlayer';
 import ShakeDetector from '@/components/multimedia/ShakeDetector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play } from 'lucide-react';
+import { Play, FileText, Calendar, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { videoApiService, VideoData } from '@/utils/mediaApis';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const MediaGallery = () => {
   const [activeTab, setActiveTab] = useState<string>('videos');
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [newsTopic, setNewsTopic] = useState('sports');
 
   const { data: videos = [], isLoading, error } = useQuery({
     queryKey: ['videos'],
     queryFn: () => videoApiService.getVideos(),
+  });
+
+  const { data: newsData = { articles: [] }, isLoading: isNewsLoading } = useQuery({
+    queryKey: ['news', newsTopic],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-news-data', {
+          body: { topic: newsTopic }
+        });
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching news:', error);
+        toast.error('Failed to load news data');
+        return { articles: [] };
+      }
+    },
+    enabled: activeTab === 'news'
   });
 
   useEffect(() => {
@@ -51,6 +73,7 @@ const MediaGallery = () => {
           <TabsList className="mb-8">
             <TabsTrigger value="videos">Videos</TabsTrigger>
             <TabsTrigger value="photos">Photos</TabsTrigger>
+            <TabsTrigger value="news">News</TabsTrigger>
             <TabsTrigger value="stores">
               Nearby Stores
             </TabsTrigger>
@@ -105,6 +128,75 @@ const MediaGallery = () => {
                 <p>Photo gallery coming soon!</p>
               </div>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="news">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-4">Latest News</h2>
+              <div className="flex gap-2 mb-6">
+                <Button 
+                  variant={newsTopic === 'sports' ? 'default' : 'outline'} 
+                  onClick={() => setNewsTopic('sports')}
+                >
+                  Sports
+                </Button>
+                <Button 
+                  variant={newsTopic === 'technology' ? 'default' : 'outline'} 
+                  onClick={() => setNewsTopic('technology')}
+                >
+                  Technology
+                </Button>
+                <Button 
+                  variant={newsTopic === 'default' ? 'default' : 'outline'} 
+                  onClick={() => setNewsTopic('default')}
+                >
+                  General
+                </Button>
+              </div>
+            </div>
+            
+            {isNewsLoading ? (
+              <div className="flex justify-center p-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : newsData.articles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {newsData.articles.map((article: any) => (
+                  <Card key={article.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="aspect-video overflow-hidden">
+                      <img 
+                        src={article.imageUrl} 
+                        alt={article.title} 
+                        className="w-full h-full object-cover transition-transform hover:scale-105"
+                      />
+                    </div>
+                    <CardHeader>
+                      <CardTitle>{article.title}</CardTitle>
+                      <CardDescription className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(article.publishedAt).toLocaleDateString()}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{article.summary}</p>
+                    </CardContent>
+                    <CardFooter className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">{article.source}</span>
+                      <Button variant="outline" size="sm" className="flex items-center gap-1" asChild>
+                        <a href={article.url} target="_blank" rel="noopener noreferrer">
+                          Read more
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p>No news articles found</p>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="stores">

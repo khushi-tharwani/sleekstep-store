@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Play } from 'lucide-react';
 
 interface VideoDisplayProps {
@@ -27,6 +27,11 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
   handleTimeUpdate,
   handleLoadedMetadata,
 }) => {
+  // Log the source URL to help with debugging
+  useEffect(() => {
+    console.log("Video source:", src);
+  }, [src]);
+
   return (
     <div 
       className="relative aspect-video" 
