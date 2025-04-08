@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import VideoPlayer from '@/components/multimedia/VideoPlayer';
+import ShakeDetector from '@/components/multimedia/ShakeDetector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -31,6 +32,16 @@ const MediaGallery = () => {
     setOpenDialog(true);
   };
 
+  const handleShake = () => {
+    toast.success("Shake detected! Switching to a random video.");
+    
+    if (videos.length > 0) {
+      const randomIndex = Math.floor(Math.random() * videos.length);
+      setSelectedVideo(videos[randomIndex]);
+      setOpenDialog(true);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-16">
@@ -46,43 +57,45 @@ const MediaGallery = () => {
           </TabsList>
           
           <TabsContent value="videos">
-            {isLoading ? (
-              <div className="flex justify-center p-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            ) : videos.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {videos.map((video) => (
-                  <div 
-                    key={video.id} 
-                    className="bg-dark-100 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer" 
-                    onClick={() => handleVideoClick(video)}
-                  >
-                    <div className="relative">
-                      <img 
-                        src={video.thumbnail} 
-                        alt={video.title} 
-                        className="w-full aspect-video object-cover"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors">
-                        <Play className="h-12 w-12 text-white opacity-80" />
+            <ShakeDetector onShake={handleShake}>
+              {isLoading ? (
+                <div className="flex justify-center p-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              ) : videos.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {videos.map((video) => (
+                    <div 
+                      key={video.id} 
+                      className="bg-dark-100 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer" 
+                      onClick={() => handleVideoClick(video)}
+                    >
+                      <div className="relative">
+                        <img 
+                          src={video.thumbnail} 
+                          alt={video.title} 
+                          className="w-full aspect-video object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors">
+                          <Play className="h-12 w-12 text-white opacity-80" />
+                        </div>
+                        <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                          {video.duration}
+                        </div>
                       </div>
-                      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                        {video.duration}
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
+                        <p className="text-gray-400 text-sm">{video.description}</p>
                       </div>
                     </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
-                      <p className="text-gray-400 text-sm">{video.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p>No videos found</p>
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p>No videos found</p>
+                </div>
+              )}
+            </ShakeDetector>
           </TabsContent>
           
           <TabsContent value="photos">
@@ -216,27 +229,11 @@ const NearbyStoresMap = () => {
         <div className="bg-white dark:bg-gray-800 p-2 rounded">
           <div className="aspect-[16/9] rounded relative overflow-hidden">
             <img 
-              src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l+3498db(72.9005,19.0522)/72.9005,19.0522,12,0/800x450?access_token=pk.eyJ1IjoibG92YWJsZXByb2plY3QiLCJhIjoiY2x3bzlpZHg2MDBpcjJrcXNjb25iaWpxcCJ9.A8W9pTSuWIJjMbN-K9XT9w" 
+              src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l+3498db(72.9005,19.0522),pin-s+e74c3c(72.9035,19.0555),pin-s+e74c3c(72.8950,19.0480),pin-s+e74c3c(72.9050,19.0610),pin-s+e74c3c(72.9120,19.0790)/72.9005,19.0522,12,0/800x450?access_token=pk.eyJ1IjoibG92YWJsZXByb2plY3QiLCJhIjoiY2x3bzlpZHg2MDBpcjJrcXNjb25iaWpxcCJ9.A8W9pTSuWIJjMbN-K9XT9w" 
               alt="Map of Mumbai showing store locations"
               className="w-full h-full object-cover"
             />
-            {/* Store markers */}
-            {stores.map((store) => (
-              <div 
-                key={store.id}
-                className="absolute w-3 h-3 bg-primary rounded-full cursor-pointer"
-                style={{ 
-                  left: `${((store.coordinates.lng - 72.88) / 0.08) * 100}%`, 
-                  top: `${100 - ((store.coordinates.lat - 19.02) / 0.08) * 100}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-                title={store.name}
-              >
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-black/70 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
-                  {store.name}
-                </div>
-              </div>
-            ))}
+            {/* Store markers are shown in the map image itself with pins */}
           </div>
         </div>
       </div>

@@ -31,6 +31,7 @@ interface YoutubeVideoResponse {
       likeCount: string;
       commentCount: string;
     };
+    url: string; // Added URL property to include the video URL
   }[];
 }
 
@@ -72,6 +73,7 @@ serve(async (req) => {
           likeCount: "15789",
           commentCount: "1243",
         },
+        url: "https://assets.mixkit.co/videos/preview/mixkit-runner-tying-the-laces-of-his-shoes-4831-large.mp4"
       },
       {
         id: "video2",
@@ -94,6 +96,7 @@ serve(async (req) => {
           likeCount: "12453",
           commentCount: "876",
         },
+        url: "https://assets.mixkit.co/videos/preview/mixkit-young-man-tying-shoelaces-before-jogging-4825-large.mp4"
       },
       {
         id: "video3",
@@ -116,6 +119,7 @@ serve(async (req) => {
           likeCount: "28976",
           commentCount: "2345",
         },
+        url: "https://assets.mixkit.co/videos/preview/mixkit-jogger-stretching-before-exercise-on-a-forest-road-4808-large.mp4"
       },
       {
         id: "video4",
@@ -138,6 +142,7 @@ serve(async (req) => {
           likeCount: "15432",
           commentCount: "987",
         },
+        url: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-slow-motion-on-a-track-32809-large.mp4"
       },
       {
         id: "video5",
@@ -160,24 +165,9 @@ serve(async (req) => {
           likeCount: "19876",
           commentCount: "1543",
         },
+        url: "https://assets.mixkit.co/videos/preview/mixkit-man-exercising-in-a-park-4830-large.mp4"
       },
     ];
-    
-    // Add real playable video URLs to each video
-    const videoUrls = [
-      "https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-seashore-with-rocks-1090-large.mp4",
-      "https://assets.mixkit.co/videos/preview/mixkit-runner-tying-the-laces-of-his-shoes-4831-large.mp4",
-      "https://assets.mixkit.co/videos/preview/mixkit-jogger-stretching-before-exercise-on-a-forest-road-4808-large.mp4",
-      "https://assets.mixkit.co/videos/preview/mixkit-young-man-tying-shoelaces-before-jogging-4825-large.mp4",
-      "https://assets.mixkit.co/videos/preview/mixkit-young-woman-exercising-and-stretching-her-legs-34882-large.mp4",
-      "https://assets.mixkit.co/videos/preview/mixkit-man-exercising-in-a-park-4830-large.mp4",
-      "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-slow-motion-on-a-track-32809-large.mp4"
-    ];
-    
-    // Assign real URLs to each video
-    mockVideos.forEach((video, index) => {
-      video.url = videoUrls[index % videoUrls.length];
-    });
     
     // If a specific video ID was requested, return just that video
     if (videoId) {
