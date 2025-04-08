@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.get-shoe-recommendations]
 verify_jwt = false
+
+[functions.get-weather-data]
+verify_jwt = false
+
+[functions.get-news-data]
+verify_jwt = false

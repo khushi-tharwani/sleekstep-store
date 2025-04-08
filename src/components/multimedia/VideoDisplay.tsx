@@ -45,6 +45,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
           // This will be handled by the parent component
         }}
         onError={(e) => console.error("Video error:", e)}
+        controls={false} // This prevents default controls from showing
       />
       
       {!isVideoLoaded && (

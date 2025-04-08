@@ -51,6 +51,7 @@ serve(async (req) => {
     // In a real implementation, we would call the YouTube API here
     // For this example, we'll return mock data with real video URLs
     
+    // These are royalty-free videos from Mixkit
     const mockVideos = [
       {
         id: "video1",

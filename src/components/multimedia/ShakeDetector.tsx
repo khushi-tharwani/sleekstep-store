@@ -1,22 +1,27 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Smartphone, Activity } from 'lucide-react';
 
 interface ShakeDetectorProps {
   sensitivity?: number;
   onShake?: () => void;
+  enableVibration?: boolean;
   children: React.ReactNode;
 }
 
 const ShakeDetector: React.FC<ShakeDetectorProps> = ({ 
   sensitivity = 15, 
   onShake, 
+  enableVibration = true,
   children 
 }) => {
   const [lastAccel, setLastAccel] = useState({ x: 0, y: 0, z: 0 });
   const [isShaking, setIsShaking] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
+  const [shakeCount, setShakeCount] = useState(0);
+  const [shakeIntensity, setShakeIntensity] = useState(0);
 
   // Handle device motion to detect shake
   const handleMotionEvent = useCallback((event: DeviceMotionEvent) => {
@@ -29,15 +34,30 @@ const ShakeDetector: React.FC<ShakeDetectorProps> = ({
     const deltaY = Math.abs(y - lastAccel.y);
     const deltaZ = Math.abs(z - lastAccel.z);
     
+    // Compute shake intensity (scaled for UI display)
+    const totalDelta = deltaX + deltaY + deltaZ;
+    const newShakeIntensity = Math.min(100, Math.floor((totalDelta / sensitivity) * 33));
+    setShakeIntensity(newShakeIntensity);
+    
     // Update last acceleration values
     setLastAccel({ x, y, z });
     
     // Check if acceleration exceeds threshold for a shake
-    const isShakeDetected = (deltaX + deltaY + deltaZ) > sensitivity;
+    const isShakeDetected = totalDelta > sensitivity;
     
     if (isShakeDetected && !isShaking) {
       setIsShaking(true);
-      console.log("Shake detected!", { deltaX, deltaY, deltaZ });
+      setShakeCount(prev => prev + 1);
+      console.log("Shake detected!", { deltaX, deltaY, deltaZ, intensity: totalDelta });
+      
+      // Use vibration API if available and enabled
+      if (enableVibration && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(200);
+        } catch (e) {
+          console.log("Vibration not supported on this device");
+        }
+      }
       
       if (onShake) {
         onShake();
@@ -50,7 +70,7 @@ const ShakeDetector: React.FC<ShakeDetectorProps> = ({
         setIsShaking(false);
       }, 1000);
     }
-  }, [lastAccel, sensitivity, isShaking, onShake]);
+  }, [lastAccel, sensitivity, isShaking, onShake, enableVibration]);
   
   // Toggle device motion detection
   const toggleDetection = async () => {
@@ -88,7 +108,7 @@ const ShakeDetector: React.FC<ShakeDetectorProps> = ({
   const startDetection = () => {
     window.addEventListener('devicemotion', handleMotionEvent);
     setIsDetecting(true);
-    toast.success("Shake detection enabled! Try shaking your device");
+    toast.success("Shake detection enabled! Try shaking your device to find random videos");
   };
   
   // Clean up event listener on unmount
@@ -103,8 +123,14 @@ const ShakeDetector: React.FC<ShakeDetectorProps> = ({
   return (
     <div className="relative">
       {isDetecting && (
-        <div className="absolute top-2 right-2 z-10 bg-primary text-white text-xs px-2 py-1 rounded-full">
-          Shake Detection Active
+        <div className="absolute top-0 right-0 z-10 bg-gradient-to-l from-primary/90 to-primary/70 text-white px-3 py-2 rounded-bl-lg shadow-md flex items-center gap-2">
+          <Activity className="h-4 w-4" />
+          <span className="text-sm font-medium">Shake Detection Active</span>
+          {shakeCount > 0 && (
+            <span className="bg-white text-primary text-xs px-2 py-0.5 rounded-full font-semibold">
+              {shakeCount}
+            </span>
+          )}
         </div>
       )}
       
@@ -112,26 +138,37 @@ const ShakeDetector: React.FC<ShakeDetectorProps> = ({
         {children}
       </div>
       
+      {isDetecting && (
+        <div className="my-4 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Shake Intensity</span>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+              {shakeIntensity}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <div 
+              className="bg-primary h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${shakeIntensity}%` }}
+            ></div>
+          </div>
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Shake your device harder to find more videos quickly! This works best on mobile devices.
+          </p>
+        </div>
+      )}
+      
       <div className="mt-4">
         <button
           onClick={toggleDetection}
-          className="w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-md flex justify-center items-center gap-2"
+          className={`w-full py-3 px-4 rounded-md flex justify-center items-center gap-2 transition-colors ${
+            isDetecting 
+              ? "bg-red-500 hover:bg-red-600 text-white" 
+              : "bg-primary hover:bg-primary/90 text-white"
+          }`}
         >
-          {isDetecting ? (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
-              </svg>
-              Disable Shake Detection
-            </>
-          ) : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-              </svg>
-              Enable Shake Detection
-            </>
-          )}
+          <Smartphone className="h-5 w-5" />
+          {isDetecting ? "Disable Shake Detection" : "Enable Shake Detection"}
         </button>
       </div>
       
